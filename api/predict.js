@@ -12,29 +12,25 @@ export default async function handler(request, response) {
       return response.status(400).json({ error: "모든 필드를 입력해주세요." });
     }
 
-    // --- 인증 블록 시작 ---
-    // 1. Vercel 환경 변수에서 Base64로 인코딩된 키를 가져옵니다.
     const encodedCredentials = process.env.GCP_CREDENTIALS_BASE64;
     if (!encodedCredentials) {
       throw new Error('GCP credentials not found in environment variables.');
     }
 
-    // 2. Base64 문자열을 디코딩하여 원래의 JSON 텍스트로 되돌립니다.
     const credentialsJson = Buffer.from(encodedCredentials, 'base64').toString('utf-8');
-    
-    // 3. JSON 텍스트를 실제 자바스크립트 객체로 변환합니다.
     const credentials = JSON.parse(credentialsJson);
 
-    // 4. (디버깅용) Vercel 로그에서 project_id가 올바르게 읽혔는지 확인합니다.
+    // *** 여기가 최종 해결의 핵심입니다! ***
+    // JSON.parse() 과정에서 문자열이 된 '\\n'을 실제 줄바꿈 문자로 바꿔줍니다.
+    credentials.private_key = credentials.private_key.replace(/\\n/g, '\n');
+
     console.log('VertexAI Client Initializing with Project ID:', credentials.project_id);
 
-    // 5. 변환된 자격 증명(credentials)을 사용하여 Vertex AI 클라이언트를 생성합니다.
     const vertexAI = new VertexAI({
       project: credentials.project_id,
       location: 'us-central1',
-      credentials, // 이 부분이 가장 중요합니다!
+      credentials,
     });
-    // --- 인증 블록 끝 ---
 
     const model = vertexAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
