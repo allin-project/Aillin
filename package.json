@@ -1,7 +1,7 @@
 {
-  "name": "sports",
+  "name": "kangkang",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "navigation.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,6 +10,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1"
+    "@google-cloud/vertexai": "^1.10.0"
   }
 }
