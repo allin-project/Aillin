@@ -569,12 +569,47 @@ footer {
                 <div id="ai-prediction-result" style="margin-top:1rem; padding:.75rem; border:1px dashed var(--border-color); min-height:50px; white-space:pre-wrap; line-height:1.6; text-align:center;">결과가 여기에 표시됩니다.</div>
               </div>
           `;
-          predictionContainer.querySelector('#ai-predict-btn').addEventListener('click', async () => {
-               const resultDiv = predictionContainer.querySelector('#ai-prediction-result');
-               resultDiv.textContent = 'AI가 분석 중입니다...';
-               await new Promise(resolve => setTimeout(resolve, 1500));
-               resultDiv.textContent = '예측 결과를 표시할 예정입니다.';
-          });
+predictionContainer.querySelector('#ai-predict-btn').addEventListener('click', async () => {
+    // 1. 사용자 입력 값 가져오기
+    const sport = predictionContainer.querySelector('#ai-sport-select').value;
+    const teamA = predictionContainer.querySelector('#ai-team-a').value.trim();
+    const teamB = predictionContainer.querySelector('#ai-team-b').value.trim();
+    const resultDiv = predictionContainer.querySelector('#ai-prediction-result');
+
+    // 2. 입력 값 유효성 검사
+    if (!teamA || !teamB) {
+        resultDiv.textContent = '팀 이름을 모두 입력해주세요.';
+        return;
+    }
+
+    resultDiv.textContent = 'AI가 분석 중입니다... 🤖';
+
+    // 3. 서버 API 호출 (fetch 사용)
+    try {
+        const response = await fetch('/api/predict', { // 서버에 배포된 API 경로
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ sport, teamA, teamB }), // 입력 데이터를 JSON으로 전송
+        });
+
+        if (!response.ok) {
+            // 서버에서 에러 응답을 보냈을 경우
+            throw new Error(`서버 오류: ${response.statusText}`);
+        }
+
+        const data = await response.json(); // 서버로부터 받은 JSON 결과 파싱
+
+        // 4. 결과 표시
+        resultDiv.textContent = data.prediction; // API가 돌려준 예측 결과 메시지
+
+    } catch (error) {
+        // 5. 에러 처리
+        console.error('AI 예측 API 호출 실패:', error);
+        resultDiv.textContent = '예측을 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.';
+    }
+});
       }
   }
   
