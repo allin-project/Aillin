@@ -211,6 +211,45 @@ main h2 {
 .gallery-item-posts .post-link:hover {
   text-decoration: underline;
 }
+
+
+/* ▼▼▼▼▼ 모바일 반응형 스타일 (여기에 추가) ▼▼▼▼▼ */
+@media (max-width: 768px) {
+  /* 헤더 레이아웃을 여러 줄로 감싸도록 변경 */
+  .header {
+    flex-wrap: wrap;
+    justify-content: space-between; /* 로고와 사용자 메뉴를 양 끝으로 */
+    row-gap: 1rem; /* 세로 아이템 간의 간격 추가 */
+  }
+
+  /* 로고와 사용자 메뉴가 첫 번째 줄에 오도록 순서 지정 */
+  .header h1 {
+    order: 1; 
+  }
+  .user-menu {
+    order: 2;
+  }
+
+  /* 검색 영역이 두 번째 줄로 내려가고, 전체 너비를 차지하도록 설정 */
+  .search-area {
+    order: 3;
+    width: 100%;
+    margin: 0; /* 기존 너비(280px)를 무시하고 100%로 설정 */
+  }
+
+  /* 로고와 게시판 제목 폰트 크기 살짝 줄이기 */
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  main h2 {
+    font-size: 1.1rem;
+  }
+
+  /* 갤러리 그리드를 1열로 변경 */
+  .gallery-grid-container {
+    grid-template-columns: 1fr;
+  }
+}
     </style>
 </head>
 <body>
