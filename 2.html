@@ -68,6 +68,7 @@ body {
 }
 .sports-gallery-dropdown.show { display: block; }
 .sports-gallery-dropdown .nav-link { width: 100%; }
+.mobile-user-menu { display: none; } /* Hide mobile menu on desktop */
 
 /* === Main Page Grid & Widgets (New) === */
 .main-grid {
@@ -76,11 +77,7 @@ body {
     gap: 1.5rem;
     align-items: flex-start;
 }
-@media (max-width: 992px) {
-    .main-grid {
-        grid-template-columns: 1fr;
-    }
-}
+
 .main-banner {
     background: linear-gradient(to right, #4a418a, #7a4a9f);
     color: white;
@@ -118,11 +115,6 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
-}
-@media (max-width: 768px) {
-    .widget-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* New Preview List Style */
@@ -202,12 +194,113 @@ footer {
   background-color: #e2e2e2; color: #555; margin-top: auto;
   padding: 1.5rem 0; text-align:center; border-top: 1px solid #dcdcdc;
 }
+
+/* === Mobile Optimization === */
+@media (max-width: 992px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+    .main-right {
+        display: none; /* Hide sidebar on mobile */
+    }
+    .header {
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .main-nav-container {
+        order: 3;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    .mobile-user-menu {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    .mobile-user-menu a, .mobile-user-menu button {
+        color: var(--text-light);
+        text-decoration: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-family: inherit;
+        font-weight: 500;
+        padding: 0.25rem;
+    }
+    .mobile-user-menu span {
+        font-weight: 700;
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 768px) {
+    .widget-grid {
+        grid-template-columns: 1fr;
+    }
+    .container {
+        padding: 0.5rem;
+    }
+    .main-banner {
+        padding: 1.5rem 1rem;
+    }
+    .main-banner h2 {
+        font-size: 1.3rem;
+    }
+
+    /* Responsive Table to Card List */
+    .table-container {
+        border-top: none;
+    }
+    .post-table thead {
+        display: none;
+    }
+    .post-table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 0.5rem;
+    }
+    .post-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        padding: 0.5rem;
+        border-bottom: 1px dotted var(--border-color);
+    }
+    .post-table td:last-child {
+        border-bottom: none;
+    }
+    .post-table td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+        margin-right: 1rem;
+    }
+    .post-table td[data-label="제목"] {
+        display: block;
+        text-align: left;
+        font-size: 1.1em;
+        font-weight: 500;
+        padding: 0.75rem 0.5rem;
+    }
+    .post-table td[data-label="제목"]::before {
+        display: none;
+    }
+    .post-table td[data-label="번호"] {
+        display: none; /* Hide post number on mobile to save space */
+    }
+}
+
     </style>
 </head>
 <body>
   <div id="app" class="container">
     <header class="header">
       <h1 id="logo">올 인 人</h1>
+      <div id="mobile-user-menu" class="mobile-user-menu"></div>
       <div class="main-nav-container">
           <nav class="main-nav">
             <ul>
@@ -523,18 +616,21 @@ footer {
       <table class="post-table">
         <thead>
           <tr>
-            <th class="col-num">번호</th><th class="col-title">제목</th><th class="col-author">글쓴이</th><th class="col-date">작성일</th><th class="col-views">조회</th><th class="col-likes">추천</th>
+            <th>번호</th><th>제목</th><th>글쓴이</th><th>작성일</th><th>조회</th><th>추천</th>
           </tr>
         </thead>
         <tbody>
           ${posts.map((post) => `
             <tr class="post-link" data-post-id="${post.id}" data-board="${post.board}">
-              <td>${post.id.substring(0, 6)}</td>
-              <td class="col-title" style="text-align:left;">
+              <td data-label="번호">${post.id.substring(0, 6)}</td>
+              <td data-label="제목">
                 <a href="#" class="post-title-link">${post.title}</a>
                 ${post.commentCount > 0 ? `<span class="comment-count" style="margin-left:4px">[${post.commentCount}]</span>` : ''}
               </td>
-              <td>${post.authorName}</td><td>${formatDate(post.createdAt)}</td><td>${post.views || 0}</td><td>${post.likes || 0}</td>
+              <td data-label="글쓴이">${post.authorName}</td>
+              <td data-label="작성일">${formatDate(post.createdAt)}</td>
+              <td data-label="조회">${post.views || 0}</td>
+              <td data-label="추천">${post.likes || 0}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -801,12 +897,24 @@ footer {
 
   // EVENT LISTENERS & INITIALIZATION
   onAuthStateChanged(auth, async (user) => {
+    const mobileUserMenu = document.getElementById('mobile-user-menu');
+
     if (user) {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const nickname = userDoc.exists() ? userDoc.data().nickname : user.email.split('@')[0];
       appState.currentUser = { uid: user.uid, email: user.email, nickname };
+      
+      if (mobileUserMenu) {
+        mobileUserMenu.innerHTML = `<span>${nickname}님</span><button id="mobile-logout-btn">로그아웃</button>`;
+        document.getElementById('mobile-logout-btn').addEventListener('click', () => signOut(auth));
+      }
     } else {
       appState.currentUser = null;
+      if (mobileUserMenu) {
+        mobileUserMenu.innerHTML = `<a href="#" id="mobile-login-btn">로그인</a><a href="#" id="mobile-signup-btn">회원가입</a>`;
+        document.getElementById('mobile-login-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-modal').classList.add('show'); });
+        document.getElementById('mobile-signup-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signup-modal').classList.add('show'); });
+      }
     }
 
     if (appState.currentView === 'main-view') {
