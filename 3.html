@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>스포츠 커뮤니티 프로토타입</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="logo.png" type="image/png" />
+    <style>
+/* === DCInside Style Theme === */
+:root {
+  --primary-color: #3b71a2; /* DC-style Blue */
+  --primary-dark:  #2c5b8b;
+  --primary-light: #eaf2f8;
+
+  --text-color: #333333;
+  --text-light: #666666;
+  --border-color: #dcdcdc;
+  --background-light: #f8f8f8;
+  --background-white: #ffffff;
+  --danger-color: #d9534f;
+
+  --font-body: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  --border-radius: 2px; /* Sharper corners */
+}
+
+* { box-sizing: border-box; transition: none; }
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--background-white);
+  color: var(--text-color);
+  font-size: 14px;
+  display: flex; flex-direction: column; min-height: 100vh; margin: 0;
+}
+.container { width: 100%; max-width: 1024px; margin-left: auto; margin-right: auto; padding: 1rem; flex-grow: 1; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* === Header & Nav === */
+.header {
+  display: flex; flex-direction: row; justify-content: space-between; align-items: center;
+  margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--primary-dark);
+}
+.header h1 {
+  font-size: 1.8rem; font-weight: 700; color: var(--primary-dark); cursor: pointer; margin: 0;
+}
+.search-area { display: flex; align-items: center; width: 280px; }
+.search-area input { padding: 6px 10px; border: 1px solid var(--border-color); flex-grow: 1; border-radius: 0; }
+.search-area input:focus { outline: 1px solid var(--primary-color); }
+.search-area button {
+  padding: 6px 10px; background-color: var(--primary-color); color: #fff;
+  border: 1px solid var(--primary-dark); border-left: none; cursor: pointer; font-weight: 500; border-radius: 0;
+}
+.user-menu { display: flex; gap: 0.5rem; align-items: center; }
+.user-menu span { font-weight: 700; }
+.user-menu a, .user-menu button {
+  color: var(--text-light); text-decoration: none; background: none; border: none;
+  cursor: pointer; font-size: 1em; font-family: inherit; font-weight: 500; padding: 0.25rem;
+}
+.user-menu a:hover, .user-menu button:hover { text-decoration: underline; color: var(--primary-dark); }
+
+.main-nav {
+  background-color: var(--background-light); border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem;
+}
+.main-nav ul { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; font-weight: 700; list-style: none; padding: 8px 10px; margin: 0; }
+.nav-link { padding: 0.25rem 0.5rem; display: block; color: var(--text-color); text-decoration: none; cursor: pointer; }
+.nav-link:hover { background-color: var(--border-color); }
+.nav-link.active { color: var(--primary-dark); font-weight: 700; text-decoration: underline; }
+
+.sports-gallery-menu { position: relative; }
+.sports-gallery-dropdown {
+  position: absolute; display: none; margin-top: 5px; width: 10rem; background-color: var(--background-white);
+  border-radius: var(--border-radius); box-shadow: 0 5px 10px rgba(0,0,0,.1); z-index: 10; border: 1px solid var(--border-color);
+  padding: 5px;
+}
+.sports-gallery-dropdown.show { display: block; }
+
+/* === Main Sections === */
+main section { margin-bottom: 2rem; }
+main h2 {
+  font-size: 1.2rem; font-weight: 700; color: var(--primary-dark);
+  margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);
+}
+.popular-posts { border: 1px solid var(--border-color); padding: 1rem; }
+.popular-posts ul { list-style: none; padding: 0; margin: 0; }
+.popular-posts li { padding: 5px 2px; border-bottom: 1px dotted #ccc; font-size: 1em; }
+.popular-posts li:last-child { border-bottom: none; }
+.popular-posts a { text-decoration: none; color: inherit; }
+.popular-posts .board-name { color: var(--text-light); }
+.popular-posts .comment-count { color: var(--danger-color); font-weight: 700; margin-left: 4px; }
+.popular-posts a:hover { text-decoration: underline; }
+
+.board-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem; }
+
+/* === Table-based Post List === */
+.table-container { border-top: 2px solid var(--primary-dark); }
+.post-table { width: 100%; border-collapse: collapse; text-align: center; }
+.post-table thead tr { background-color: var(--background-light); }
+.post-table th, .post-table td { padding: 8px 5px; border-bottom: 1px solid var(--border-color); }
+.post-table th { font-weight: 700; color: var(--text-color); }
+.post-table .col-num { width: 10%; }
+.post-table .col-title { width: auto; text-align: left; }
+.post-table .col-author { width: 15%; }
+.post-table .col-date { width: 12%; color: var(--text-light); font-size: 0.95em; }
+.post-table .col-views, .post-table .col-likes { width: 8%; color: var(--text-light); }
+.post-table tbody tr:hover { background-color: var(--primary-light); cursor: pointer; }
+.post-table .post-title-link { text-decoration: none; color: var(--text-color); }
+.post-table .post-title-link:hover { text-decoration: underline; }
+
+.pagination { display: flex; justify-content: center; margin-top: 1rem; }
+.pagination button {
+    padding: 4px 8px; margin: 0 2px; border: 1px solid var(--border-color);
+    background-color: var(--background-white); color: var(--text-light); cursor: pointer;
+}
+.pagination button.active { background-color: var(--primary-color); color: #fff; border-color: var(--primary-dark); font-weight: 700; }
+
+/* === Buttons === */
+.write-btn {
+  background-color: #f0f0f0; color: var(--text-color); padding: 5px 12px;
+  border-radius: var(--border-radius); font-weight: 500; border: 1px solid #ccc; cursor: pointer;
+}
+.write-btn:hover { background-color: #e0e0e0; }
+.write-btn.primary { background-color: var(--primary-color); border-color: var(--primary-dark); color: #fff; }
+.write-btn.primary:hover { background-color: var(--primary-dark); }
+
+/* === Post View === */
+#post-content-view { border: 1px solid var(--border-color); }
+.post-header { padding: 1rem; border-bottom: 1px solid var(--border-color); background-color: var(--background-light); }
+.post-header h1 { font-size: 1.5rem; margin: 0 0 0.5rem 0; font-weight: 700;}
+#post-meta { font-size: 0.9em; color: var(--text-light); }
+#post-body { padding: 1.5rem 1rem; font-size: 1.05em; line-height: 1.8; min-height: 200px; border-bottom: 1px solid var(--border-color); }
+#vote-bar { padding: 1rem; display:flex; justify-content: center; gap: 0.5rem; align-items:center; border-bottom: 1px solid var(--border-color); }
+.post-actions { padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+
+/* === Comments === */
+#comments-section { margin-top: 1rem; }
+#comments-section h3 { font-size: 1.1em; padding: 0.5rem; border-bottom: 1px solid var(--border-color); margin: 0; font-weight: 700; }
+.comment-item { padding: 0.75rem; border-bottom: 1px dotted var(--border-color); }
+.comment-item:last-child { border-bottom: 1px solid var(--border-color); }
+.comment-author { font-weight: 700; color: var(--primary-dark); }
+.comment-date { font-size: 0.9em; color: #999; margin-left: 0.5rem; }
+.reply-list { margin-top: 0.75rem; padding-left: 1rem; border-left: 3px solid var(--background-light); }
+.comment-form {
+    padding: 1rem; display: flex; gap: 0.5rem;
+    background-color: var(--background-light); border: 1px solid var(--border-color); border-top: none;
+}
+.comment-form textarea { flex-grow: 1; border: 1px solid var(--border-color); padding: 5px; resize: vertical; min-height: 50px; }
+
+/* === Modal === */
+.modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 50;}
+.modal-overlay.show { display: flex; }
+.modal-box { padding: 1.5rem; border-radius:var(--border-radius); width: 100%; max-width: 420px; background-color: var(--background-white); border: 1px solid #333;}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.modal-header h2 { font-size: 1.2rem; font-weight: 700; }
+.modal-close-btn { font-size: 1.5rem; color: #999; cursor: pointer; border: none; background: none; line-height: 1; }
+.modal-body .form-group { margin-bottom: 1rem; }
+.modal-body label { display: block; margin-bottom: .5rem; font-weight: 500; }
+.modal-body input { width: 100%; padding: 6px; border: 1px solid var(--border-color); border-radius: 0; }
+   
+   /* === Gallery Grid (추가) === */
+.gallery-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2개의 열을 생성 */
+  gap: 1rem; /* 아이템 사이의 간격 */
+}
+.gallery-grid-item {
+  display: block;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  text-decoration: none;
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.gallery-grid-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+.gallery-item-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.gallery-item-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+.gallery-item-posts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color: var(--text-light);
+}
+.gallery-item-posts li {
+  padding: 3px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 글자 수가 많으면 ...으로 표시 */
+}
+/* 갤러리 그리드 내부의 링크 스타일을 일반 텍스트처럼 보이게 초기화 */
+.gallery-item-posts .post-link {
+  color: inherit; /* 부모 요소의 글자색(회색)을 그대로 사용 */
+  text-decoration: none; /* 밑줄 제거 */
+}
+
+/* 마우스를 올렸을 때만 밑줄을 표시하여 링크임을 알려줌 */
+.gallery-item-posts .post-link:hover {
+  text-decoration: underline;
+}
+    </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <header class="header">
+      <h1 id="logo">올 인 人</h1>
+      <form id="search-form" class="search-area">
+        <input type="text" id="search-input" placeholder="검색..." required />
+        <button type="submit">검색</button>
+      </form>
+      <div id="user-menu-container" class="user-menu"></div>
+    </header>
+
+    <nav class="main-nav">
+      <ul>
+        <li><a href="#" class="nav-link" data-board="freeboard">자유게시판</a></li>
+        <li class="sports-gallery-menu" id="sports-gallery-menu">
+          <a href="#" id="sports-gallery-toggle" class="nav-link sports-gallery-toggle" data-board-group="sports">스포츠갤러리</a>
+          <div id="sports-gallery-dropdown" class="sports-gallery-dropdown">
+            <a href="#" class="nav-link" data-board="soccer">축구</a>
+            <a href="#" class="nav-link" data-board="baseball">야구</a>
+            <a href="#" class="nav-link" data-board="basketball">농구</a>
+            <a href="#" class="nav-link" data-board="esports">e스포츠</a>
+          </div>
+        </li>
+        <li><a href="#" class="nav-link" data-board="announcements">공지사항</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div id="main-view" class="view active">
+        <section>
+          <h2>커뮤니티 인기글</h2>
+          <div id="popular-posts" class="popular-posts"></div>
+        </section>
+
+
+        <section>
+          <h2>주요 갤러리 바로가기</h2>
+          <div class="gallery-grid-container">
+            <a href="#" class="gallery-grid-item" data-board="freeboard">
+              <div class="gallery-item-header">
+                <h3>자유게시판</h3>
+              </div>
+              <ul class="gallery-item-posts">
+              </ul>
+            </a>
+            <a href="#" class="gallery-grid-item" data-board="soccer">
+              <div class="gallery-item-header">
+                <h3>축구</h3>
+              </div>
+              <ul class="gallery-item-posts">
+              </ul>
+            </a>
+            <a href="#" class="gallery-grid-item" data-board="baseball">
+              <div class="gallery-item-header">
+                <h3>야구</h3>
+              </div>
+              <ul class="gallery-item-posts">
+              </ul>
+            </a>
+            <a href="#" class="gallery-grid-item" data-board="basketball">
+              <div class="gallery-item-header">
+                <h3>농구</h3>
+              </div>
+              <ul class="gallery-item-posts">
+              </ul>
+            </a>
+            <a href="#" class="gallery-grid-item" data-board="esports">
+              <div class="gallery-item-header">
+                <h3>e스포츠</h3>
+              </div>
+              <ul class="gallery-item-posts">
+              </ul>
+            </a>
+            <a href="#" class="gallery-grid-item" data-board="announcements">
+              <div class="gallery-item-header">
+                <h3>공지사항</h3>
+              </div>
+              <ul class="gallery-item-posts">
+              </ul>
+            </a>
+          </div>
+        </section>
+
+
+
+
+
+        <section>
+          <h2>AI 승부 예측</h2>
+          <div id="prediction-ui" style="border:1px solid var(--border-color); padding: 1rem;">
+            <div style="display:flex; gap:.75rem; margin-bottom:.75rem; align-items:center; flex-wrap:wrap;">
+              <select id="ai-sport-select" style="padding:4px; border:1px solid var(--border-color);">
+                <option value="soccer">축구</option> <option value="baseball">야구</option> <option value="basketball">농구</option> <option value="esports">e스포츠</option>
+              </select>
+              <input type="text" id="ai-team-a" placeholder="팀 A" style="flex:1; padding:6px; border:1px solid var(--border-color);">
+              <span style="font-weight:700;">VS</span>
+              <input type="text" id="ai-team-b" placeholder="팀 B" style="flex:1; padding:6px; border:1px solid var(--border-color);">
+              <button id="ai-predict-btn" class="write-btn primary">예측하기</button>
+            </div>
+            <div id="ai-prediction-result" style="margin-top:.5rem; padding:.75rem; border:1px dashed var(--border-color); min-height:50px; white-space:pre-wrap; line-height:1.6;">결과가 여기에 표시됩니다.</div>
+          </div>
+        </section>
+      </div>
+
+      <div id="board-view" class="view">
+        <div class="board-header">
+          <h2 id="board-title"></h2>
+          <button id="write-post-btn" class="write-btn primary">글쓰기</button>
+        </div>
+        <div id="post-list-container" class="table-container"></div>
+        <div id="pagination" class="pagination"></div>
+      </div>
+
+      <div id="post-view" class="view"></div>
+      <div id="write-view" class="view"></div>
+      <div id="search-results-view" class="view"></div>
+    </main>
+  </div>
+
+  <div id="login-modal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header"><h2>로그인</h2><button class="modal-close-btn">&times;</button></div>
+        <div class="modal-body">
+          <form id="login-form">
+            <div class="form-group"><label for="login-email">이메일</label><input type="email" id="login-email" required /></div>
+            <div class="form-group"><label for="login-password">비밀번호</label><input type="password" id="login-password" required /></div>
+            <button type="submit" class="write-btn primary" style="width:100%; padding: 8px;">로그인</button>
+          </form>
+        </div>
+      </div>
+  </div>
+  <div id="signup-modal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header"><h2>회원가입</h2><button class="modal-close-btn">&times;</button></div>
+        <div class="modal-body">
+          <form id="signup-form">
+            <div class="form-group"><label for="signup-nickname">닉네임</label><input type="text" id="signup-nickname" required /></div>
+            <div class="form-group"><label for="signup-email">이메일</label><input type="email" id="signup-email" required /></div>
+            <div class="form-group"><label for="signup-password">비밀번호</label><input type="password" id="signup-password" minlength="6" required /></div>
+            <button type="submit" class="write-btn primary" style="width:100%; padding: 8px;">가입하기</button>
+          </form>
+        </div>
+      </div>
+  </div>
+
+  <footer style="background-color: #f0f0f0; color: #555; margin-top: auto; padding: 1rem 0; text-align:center; border-top: 1px solid var(--border-color);">
+      <p style="font-weight:700; margin:0 0 5px 0;">올 인 人</p>
+      <div style="margin-bottom: 5px;">
+        <a href="#" style="color:#555; text-decoration:none; margin: 0 5px;">회사소개</a>
+        <a href="#" style="color:#555; text-decoration:none; margin: 0 5px;">이용약관</a>
+      </div>
+      <p style="font-size: 0.8em; color: #888; margin:0;">© 2025 All In 人. All Rights Reserved.</p>
+  </footer>
+
+<script type="module">
+  // Firebase SDK IMPORTS
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, orderBy, limit, addDoc, serverTimestamp, increment, updateDoc, runTransaction, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+  // FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyAUuUlYHUwOuwnm_hsIsd7XHlj5voCecQk",
+    authDomain: "community-d18d4.firebaseapp.com",
+    projectId: "community-d18d4",
+    storageBucket: "community-d18d4.appspot.com",
+    messagingSenderId: "497702481194",
+    appId: "1:497702481194:web:a826db91628adc24718253"
+  };
+
+  // FIREBASE INITIALIZATION
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  // APP STATE
+  const appState = { currentUser: null, currentView: 'main-view', currentBoard: null, currentPostId: null, currentPage: 1, postsPerPage: 10 };
+  const boardNames = { freeboard: '자유게시판', announcements: '공지사항', soccer: '축구', baseball: '야구', basketball: '농구', esports: 'e스포츠' };
+
+  // UTILITY FUNCTIONS
+  function wirePostLinks(root = document) {
+    root.querySelectorAll('.post-link').forEach(el => {
+      if (el.__wired) return;
+      el.__wired = true;
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const postId = el.dataset.postId;
+        const boardId = el.dataset.board;
+        if (postId && boardId) renderPostView(boardId, postId);
+      });
+    });
+  }
+
+  async function safeUpdateViewCount(postRef) {
+    try {
+      const snap = await getDoc(postRef);
+      if (snap.exists()) { await updateDoc(postRef, { views: increment(1) }); }
+    } catch (err) { console.warn('ViewCount update skipped:', err.message); }
+  }
+
+  // DATA LOADING
+  async function fetchPopularPosts() {
+    const qy = query(collection(db, 'posts'), orderBy('likes', 'desc'), limit(5));
+    const snapshot = await getDocs(qy);
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  async function fetchPostsForBoard(boardId, page = 1) {
+    const qy = query(collection(db, 'posts'), where("board", "==", boardId), orderBy("createdAt", "desc"), limit(appState.postsPerPage));
+    const snapshot = await getDocs(qy);
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  async function fetchSearchResults(queryText) {
+    const qy = query(collection(db, "posts"), where("title", ">=", queryText), where("title", "<=", queryText + '\uf8ff'), orderBy("title"), limit(20));
+    const snapshot = await getDocs(qy);
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  function showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId)?.classList.add('active');
+    appState.currentView = viewId;
+    window.scrollTo(0, 0);
+  }
+
+  // ▼▼▼▼▼ 여기에 새 함수 추가 ▼▼▼▼▼
+
+// DATA LOADING 섹션에 추가하세요.
+async function fetchLatestPostsForBoard(boardId, count = 3) {
+  try {
+    const q = query(
+      collection(db, 'posts'),
+      where("board", "==", boardId),
+      orderBy("createdAt", "desc"),
+      limit(count)
+    );
+    const snapshot = await getDocs(q);
+    // id와 데이터를 함께 반환하도록 수정
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error(`Error fetching latest posts for ${boardId}:`, error);
+    return []; // 오류 발생 시 빈 배열 반환
+  }
+}
+
+
+// ▼▼▼▼▼ 여기에 새 함수 추가 ▼▼▼▼▼
+
+// RENDER FUNCTIONS 섹션에 추가하세요.
+async function populateGalleryGrid() {
+  const gridItems = document.querySelectorAll('.gallery-grid-item');
+
+  // 각 그리드 아이템을 순회하며 데이터 채우기
+  for (const item of gridItems) {
+    const boardId = item.dataset.board;
+    const postsListEl = item.querySelector('.gallery-item-posts');
+
+    if (!boardId || !postsListEl) continue; // 필요한 요소가 없으면 건너뛰기
+
+    // 로딩 중임을 표시
+    postsListEl.innerHTML = `<li><small>게시글을 불러오는 중...</small></li>`;
+
+    const latestPosts = await fetchLatestPostsForBoard(boardId, 3);
+
+    if (latestPosts.length > 0) {
+      // 게시글 제목으로 목록을 생성
+      postsListEl.innerHTML = latestPosts.map(post => {
+        // XSS(Cross-Site Scripting) 방지를 위해 텍스트를 안전하게 처리
+        const titleText = document.createElement('span').innerText = post.title;
+        // 각 li를 post-link로 만들어 클릭 가능하게 함
+        return `<li><a href="#" class="post-link" data-post-id="${post.id}" data-board="${post.board}"><small>${titleText}</small></a></li>`;
+      }).join('');
+    } else {
+      postsListEl.innerHTML = `<li><small>최신글이 없습니다.</small></li>`;
+    }
+  }
+  // 동적으로 생성된 링크에 이벤트 리스너 다시 연결
+  wirePostLinks(document.querySelector('.gallery-grid-container'));
+}
+
+
+  // RENDER FUNCTIONS
+async function renderMainView() {
+    showView('main-view');
+    const popularPosts = await fetchPopularPosts();
+    const container = document.getElementById('popular-posts');
+    container.innerHTML = popularPosts.length ?
+      `<ul>${popularPosts.map(post => `<li><a href="#" class="post-link" data-post-id="${post.id}" data-board="${post.board}"><span class="board-name">[${boardNames[post.board]}]</span> ${post.title} <span class="comment-count">${post.commentCount ? `[${post.commentCount}]` : ''}</span></a></li>`).join('')}</ul>`
+      : "<p>인기글이 없습니다.</p>";
+    wirePostLinks(container);
+
+    // ▼▼▼▼▼ 이 줄을 추가하세요 ▼▼▼▼▼
+    populateGalleryGrid();
+  }
+
+  async function renderBoardView(boardId, page) {
+    appState.currentBoard = boardId;
+    appState.currentPage = page;
+    showView('board-view');
+    document.getElementById('board-title').textContent = boardNames[boardId];
+
+    const container = document.getElementById('post-list-container');
+    const formatDate = (ts) => ts ? new Date(ts.seconds * 1000).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }) : '-';
+    const posts = await fetchPostsForBoard(boardId, page);
+
+    if (!posts.length) {
+      container.innerHTML = '<div style="text-align:center; padding: 2rem 0;">게시글이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="post-table">
+        <thead>
+          <tr>
+            <th class="col-num">번호</th>
+            <th class="col-title">제목</th>
+            <th class="col-author">글쓴이</th>
+            <th class="col-date">작성일</th>
+            <th class="col-views">조회</th>
+            <th class="col-likes">추천</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${posts.map((post) => `
+            <tr class="post-link" data-post-id="${post.id}" data-board="${post.board}">
+              <td>${post.id.substring(0, 6)}</td>
+              <td class="col-title">
+                <a href="#" class="post-title-link">${post.title}</a>
+                ${post.commentCount > 0 ? `<span class="comment-count">[${post.commentCount}]</span>` : ''}
+              </td>
+              <td class="col-author">${post.authorName}</td>
+              <td class="col-date">${formatDate(post.createdAt)}</td>
+              <td class="col-views">${post.views || 0}</td>
+              <td class="col-likes">${post.likes || 0}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+    wirePostLinks(container);
+  }
+
+  async function renderPostView(boardId, postId) {
+    showView('post-view');
+    appState.currentBoard = boardId;
+    appState.currentPostId = postId;
+    const postRef = doc(db, "posts", postId);
+
+    await safeUpdateViewCount(postRef);
+    const postSnap = await getDoc(postRef);
+
+    if (!postSnap.exists()) {
+      alert("게시물을 찾을 수 없습니다.");
+      return renderBoardView(boardId, 1);
+    }
+
+    const post = postSnap.data();
+    const container = document.getElementById('post-view');
+    const formatDate = (ts) => ts ? new Date(ts.seconds * 1000).toLocaleString('ko-KR') : '';
+    const isAuthor = appState.currentUser && appState.currentUser.uid === post.authorId;
+    const authorButtons = `
+        <button id="edit-post-btn" class="write-btn">수정</button>
+        <button id="delete-post-btn" class="write-btn">삭제</button>
+    `;
+    const imageHtml = post.imageUrl ? `<img src="${post.imageUrl}" alt="${post.title}" style="max-width: 100%; margin: 1rem 0;">` : '';
+
+    container.innerHTML = `
+      <div id="post-content-view">
+        <div class="post-header">
+          <h1>${post.title}</h1>
+          <div id="post-meta">
+            <span><b>글쓴이:</b> ${post.authorName}</span> |
+            <span><b>작성일:</b> ${formatDate(post.createdAt)}</span> |
+            <span><b>조회:</b> ${post.views || 0}</span>
+          </div>
+        </div>
+        <div id="post-body">
+          ${imageHtml}
+          ${post.content.replace(/\n/g, '<br>')}
+        </div>
+        <div id="vote-bar">
+          <button id="like-btn" class="write-btn">👍 추천 <span id="like-count">${post.likes || 0}</span></button>
+          <button id="dislike-btn" class="write-btn">👎 비추천 <span id="dislike-count">${post.dislikes || 0}</span></button>
+        </div>
+        <div class="post-actions">
+          <button id="back-to-list-btn" class="write-btn">목록</button>
+          <div class="author-actions">${isAuthor ? authorButtons : ''}</div>
+        </div>
+      </div>
+      <div id="comments-section">
+        <h3>댓글</h3>
+        <ul id="comments-list"></ul>
+        ${appState.currentUser ? `
+        <form id="comment-form" class="comment-form">
+          <textarea id="comment-text" placeholder="댓글을 입력하세요..." required></textarea>
+          <button type="submit" class="write-btn primary">등록</button>
+        </form>
+        ` : `<p style="text-align:center; padding: 1rem; background-color: var(--background-light);">댓글을 작성하려면 로그인이 필요합니다.</p>`}
+      </div>`;
+
+    setupVoteUI(postId);
+    renderComments(postId);
+
+    document.getElementById('back-to-list-btn').addEventListener('click', () => renderBoardView(boardId, 1));
+    if (appState.currentUser) {
+      document.getElementById('comment-form')?.addEventListener('submit', (e) => handleCommentSubmit(e, postId));
+    }
+    if (isAuthor) {
+      document.getElementById('edit-post-btn')?.addEventListener('click', () => renderEditView(postId));
+      document.getElementById('delete-post-btn')?.addEventListener('click', () => handlePostDelete(postId, boardId));
+    }
+  }
+
+  function renderWriteView() {
+    showView('write-view');
+    const container = document.getElementById('write-view');
+    container.innerHTML = `
+      <div id="write-form-container" style="border:1px solid var(--border-color);">
+        <h2 style="padding:0.5rem 1rem; margin:0; border-bottom:1px solid var(--border-color); background:var(--background-light);">${boardNames[appState.currentBoard]} 글쓰기</h2>
+        <form id="write-form" style="padding:1rem;">
+          <input type="text" id="write-title" placeholder="제목" required style="width:100%; padding:6px; border:1px solid var(--border-color); margin-bottom:0.5rem;">
+          <div style="margin-bottom: 0.5rem;">
+            <label for="write-image" style="font-weight: 500; display: block; margin-bottom: .25rem;">이미지</label>
+            <input type="file" id="write-image" accept="image/*">
+          </div>
+          <textarea id="write-content" placeholder="내용" required style="width:100%; min-height:300px; padding:6px; border:1px solid var(--border-color); margin-bottom:1rem;"></textarea>
+          <div style="text-align:right; display:flex; justify-content:flex-end; gap:0.5rem;">
+            <button type="button" id="cancel-write-btn" class="write-btn">취소</button>
+            <button type="submit" id="submit-post-btn" class="write-btn primary">등록</button>
+          </div>
+        </form>
+      </div>`;
+
+    document.getElementById('write-form').addEventListener('submit', handlePostSubmit);
+    document.getElementById('cancel-write-btn').addEventListener('click', () => renderBoardView(appState.currentBoard, 1));
+  }
+  
+  // All other JS functions (Authentication, handlers, etc.)
+  // This section should contain all the remaining JavaScript logic
+  // to ensure the application is fully functional.
+  // ... (pasting the complete, working JS logic here) ...
+  async function renderEditView(postId) {
+    const postRef = doc(db, "posts", postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) {
+      alert("수정할 게시물을 찾을 수 없습니다.");
+      return renderBoardView(appState.currentBoard, 1);
+    }
+    const post = postSnap.data();
+
+    showView('write-view');
+    const container = document.getElementById('write-view');
+    container.innerHTML = `
+      <div id="write-form-container" style="border:1px solid var(--border-color);">
+        <h2 style="padding:0.5rem 1rem; margin:0; border-bottom:1px solid var(--border-color); background:var(--background-light);">게시물 수정</h2>
+        <form id="edit-form" data-post-id="${postId}" style="padding:1rem;">
+          <input type="text" id="edit-title" value="${post.title}" required style="width:100%; padding:6px; border:1px solid var(--border-color); margin-bottom:0.5rem;">
+          <textarea id="edit-content" required style="width:100%; min-height:300px; padding:6px; border:1px solid var(--border-color); margin-bottom:1rem;">${post.content}</textarea>
+          <div style="text-align:right; display:flex; justify-content:flex-end; gap:0.5rem;">
+            <button type="button" id="cancel-edit-btn" class="write-btn">취소</button>
+            <button type="submit" class="write-btn primary">수정하기</button>
+          </div>
+        </form>
+      </div>`;
+
+    document.getElementById('edit-form').addEventListener('submit', handlePostUpdate);
+    document.getElementById('cancel-edit-btn').addEventListener('click', () => renderPostView(post.board, postId));
+  }
+
+  async function renderSearchResultsView(results, queryText) {
+    showView('search-results-view');
+    const container = document.getElementById('search-results-view');
+    let html = `<h2>'${queryText}' 검색 결과</h2>`;
+    if (!results.length) {
+      html += '<p style="text-align:center; padding: 2rem 0;">검색 결과가 없습니다.</p>';
+    } else {
+      html += `<div class="popular-posts"><ul>` + results.map(post => `
+        <li><a href="#" class="post-link" data-post-id="${post.id}" data-board="${post.board}"><span class="board-name">[${boardNames[post.board]}]</span> ${post.title}<span class="comment-count">[${post.commentCount || 0}]</span></a></li>
+      `).join('') + `</ul></div>`;
+    }
+    container.innerHTML = html;
+    wirePostLinks(container);
+  }
+
+  async function renderComments(postId) {
+    const commentsList = document.getElementById('comments-list');
+    if (!commentsList) return;
+    commentsList.innerHTML = '<li>댓글을 불러오는 중...</li>';
+
+    const commentsCol = collection(db, "posts", postId, "comments");
+    const qy = query(commentsCol, orderBy("createdAt"));
+    const snapshot = await getDocs(qy);
+    const commentsMap = new Map();
+    snapshot.docs.forEach(d => { commentsMap.set(d.id, { id: d.id, children: [], ...d.data() }); });
+
+    const roots = [];
+    commentsMap.forEach(c => {
+      if (c.parentId && commentsMap.has(c.parentId)) commentsMap.get(c.parentId).children.push(c);
+      else roots.push(c);
+    });
+
+    commentsList.innerHTML = '';
+    if (!roots.length) {
+      commentsList.innerHTML = '<li style="text-align:center; padding: 1rem 0;">작성된 댓글이 없습니다.</li>';
+      return;
+    }
+    roots.forEach(c => commentsList.appendChild(createCommentElement(c)));
+  }
+
+  function createCommentElement(comment) {
+    const li = document.createElement('li');
+    li.className = 'comment-item';
+    li.id = `comment-${comment.id}`;
+    const formatDate = (ts) => ts ? new Date(ts.seconds * 1000).toLocaleString('ko-KR') : '';
+    li.innerHTML = `
+      <div class="comment-header">
+        <span class="comment-author">${comment.authorName}</span>
+        <span class="comment-date">${formatDate(comment.createdAt)}</span>
+      </div>
+      <p class="comment-body">${comment.text.replace(/\n/g, '<br>')}</p>
+      <div class="comment-actions">
+        ${appState.currentUser ? `<button class="reply-btn" data-comment-id="${comment.id}" style="background:none; border:none; color:var(--text-light); cursor:pointer; font-size:0.9em; padding:0;">답글</button>` : ''}
+      </div>`;
+    if (comment.children.length > 0) {
+      const replyList = document.createElement('ul');
+      replyList.className = 'reply-list';
+      comment.children.forEach(r => replyList.appendChild(createCommentElement(r)));
+      li.appendChild(replyList);
+    }
+    li.querySelector('.reply-btn')?.addEventListener('click', showReplyForm);
+    return li;
+  }
+
+  function showReplyForm(e) {
+    const parentCommentId = e.target.dataset.commentId;
+    const parentCommentItem = document.getElementById(`comment-${parentCommentId}`);
+    const existing = parentCommentItem.querySelector('.reply-form-container');
+    if (existing) { existing.remove(); return; }
+
+    const formContainer = document.createElement('div');
+    formContainer.className = 'reply-form-container';
+    formContainer.innerHTML = `
+      <form class="comment-form reply-form" style="padding:0.5rem; margin-top:0.5rem;">
+        <textarea placeholder="답글..." required style="min-height:40px;"></textarea>
+        <button type="submit" class="write-btn">등록</button>
+      </form>`;
+    formContainer.querySelector('.reply-form').addEventListener('submit', (event) => {
+      handleCommentSubmit(event, appState.currentPostId, parentCommentId);
+    });
+    parentCommentItem.appendChild(formContainer);
+    formContainer.querySelector('textarea').focus();
+  }
+
+  async function setupVoteUI(postId) {
+    const likeBtn = document.getElementById('like-btn');
+    const dislikeBtn = document.getElementById('dislike-btn');
+    if (!likeBtn || !dislikeBtn) return;
+    likeBtn.addEventListener('click', () => handleVote(postId, 1));
+    dislikeBtn.addEventListener('click', () => handleVote(postId, -1));
+    const user = appState.currentUser;
+    if (!user) return;
+    const voteRef = doc(db, "posts", postId, "votes", user.uid);
+    const snap = await getDoc(voteRef);
+    if (snap.exists()) {
+      const v = snap.data().value;
+      if (v === 1) likeBtn.style.backgroundColor = 'var(--primary-light)';
+      if (v === -1) dislikeBtn.style.backgroundColor = 'var(--primary-light)';
+    }
+  }
+
+  async function handleVote(postId, value) {
+    const user = appState.currentUser;
+    if (!user) { alert("로그인이 필요합니다."); return; }
+    const postRef = doc(db, "posts", postId);
+    const voteRef = doc(db, "posts", postId, "votes", user.uid);
+    try {
+      await runTransaction(db, async (tx) => {
+        const [postSnap, voteSnap] = await Promise.all([tx.get(postRef), tx.get(voteRef)]);
+        if (!postSnap.exists()) throw new Error("Post not found");
+        let { likes = 0, dislikes = 0 } = postSnap.data();
+        if (!voteSnap.exists()) {
+          if (value === 1) likes++; else dislikes++;
+          tx.set(voteRef, { value });
+        } else {
+          const prev = voteSnap.data().value;
+          if (prev === value) {
+            if (value === 1) likes--; else dislikes--;
+            tx.delete(voteRef);
+          } else {
+            if (value === 1) { likes++; dislikes--; } else { dislikes++; likes--; }
+            tx.update(voteRef, { value });
+          }
+        }
+        tx.update(postRef, { likes, dislikes });
+      });
+      const latest = (await getDoc(postRef)).data();
+      document.getElementById('like-count').textContent = latest.likes || 0;
+      document.getElementById('dislike-count').textContent = latest.dislikes || 0;
+      setupVoteUI(postId);
+    } catch (e) {
+      console.error(e);
+      alert("투표 처리 중 오류가 발생했습니다.");
+    }
+  }
+
+  async function handleSearchSubmit(e) {
+    e.preventDefault();
+    const queryText = document.getElementById('search-input').value.trim();
+    if (queryText) {
+      const results = await fetchSearchResults(queryText);
+      renderSearchResultsView(results, queryText);
+    }
+  }
+
+  async function handlePostSubmit(e) {
+    e.preventDefault();
+    const title = document.getElementById('write-title').value;
+    const content = document.getElementById('write-content').value;
+    const imageFile = document.getElementById('write-image')?.files[0];
+    const user = appState.currentUser;
+    if (!user) return alert("로그인이 필요합니다.");
+    const submitBtn = document.getElementById('submit-post-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '등록 중...';
+    try {
+      let imageUrl = null;
+      if (imageFile) {
+        submitBtn.textContent = '이미지 업로드 중...';
+        const storageRef = ref(storage, `images/${Date.now()}-${imageFile.name}`);
+        const uploadResult = await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      }
+      const postData = { title, content, imageUrl, authorId: user.uid, authorName: user.nickname, board: appState.currentBoard, createdAt: serverTimestamp(), views: 0, likes: 0, dislikes: 0, commentCount: 0 };
+      await addDoc(collection(db, 'posts'), postData);
+      alert("게시물이 등록되었습니다.");
+      renderBoardView(appState.currentBoard, 1);
+    } catch (error) {
+      console.error("게시물 등록 오류: ", error);
+      alert("게시물 등록에 실패했습니다.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = '등록';
+    }
+  }
+
+  async function handlePostUpdate(e) {
+    e.preventDefault();
+    const postId = e.target.dataset.postId;
+    const newTitle = document.getElementById('edit-title').value;
+    const newContent = document.getElementById('edit-content').value;
+    try {
+      await updateDoc(doc(db, "posts", postId), { title: newTitle, content: newContent });
+      alert("게시물이 성공적으로 수정되었습니다.");
+      renderPostView(appState.currentBoard, postId);
+    } catch (error) {
+      console.error("게시물 수정 오류:", error);
+      alert("게시물 수정에 실패했습니다.");
+    }
+  }
+
+  async function handlePostDelete(postId, boardId) {
+    if (confirm("정말로 게시물을 삭제하시겠습니까?")) {
+      try {
+        await deleteDoc(doc(db, "posts", postId));
+        alert("게시물이 삭제되었습니다.");
+        renderBoardView(boardId, 1);
+      } catch (error) {
+        console.error("게시물 삭제 오류:", error);
+        alert("게시물 삭제에 실패했습니다.");
+      }
+    }
+  }
+
+  async function handleCommentSubmit(e, postId, parentId = null) {
+    e.preventDefault();
+    const user = appState.currentUser;
+    if (!user) return;
+    const textarea = e.target.querySelector('textarea');
+    const text = textarea.value.trim();
+    if (!text) return;
+    try {
+      const commentData = { text, authorId: user.uid, authorName: user.nickname, createdAt: serverTimestamp(), ...(parentId && { parentId }) };
+      await addDoc(collection(db, "posts", postId, "comments"), commentData);
+      await updateDoc(doc(db, "posts", postId), { commentCount: increment(1) });
+      renderComments(postId);
+      textarea.value = '';
+      e.target.closest('.reply-form-container')?.remove();
+    } catch (error) {
+      console.error("댓글 등록 오류: ", error);
+      alert("댓글 등록에 실패했습니다.");
+    }
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    const userMenuContainer = document.getElementById('user-menu-container');
+    if (user) {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const nickname = userDoc.exists() ? userDoc.data().nickname : user.email.split('@')[0];
+      appState.currentUser = { uid: user.uid, email: user.email, nickname };
+      userMenuContainer.innerHTML = `<span>${nickname}님</span><button id="logout-btn">로그아웃</button>`;
+      document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+    } else {
+      appState.currentUser = null;
+      userMenuContainer.innerHTML = `<a href="#" id="login-btn">로그인</a><a href="#" id="signup-btn">회원가입</a>`;
+      document.getElementById('login-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-modal').classList.add('show'); });
+      document.getElementById('signup-btn').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signup-modal').classList.add('show'); });
+    }
+    if (appState.currentView === 'post-view' && appState.currentBoard && appState.currentPostId) {
+      renderPostView(appState.currentBoard, appState.currentPostId);
+    }
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nickname = document.getElementById('signup-nickname').value;
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: nickname });
+      await setDoc(doc(db, "users", cred.user.uid), { nickname, email });
+      alert('회원가입이 완료되었습니다!');
+      document.getElementById('signup-modal').classList.remove('show');
+    } catch (error) { alert(`회원가입 실패: ${error.message}`); }
+  });
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      document.getElementById('login-modal').classList.remove('show');
+    } catch (error) { alert(`로그인 실패: ${error.message}`); }
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(modal => {
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+  });
+  document.querySelectorAll('.modal-close-btn').forEach(btn => {
+    btn.addEventListener('click', () => { btn.closest('.modal-overlay').classList.remove('show'); });
+  });
+
+  document.getElementById('sports-gallery-toggle').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('sports-gallery-dropdown').classList.toggle('show');
+  });
+
+document.addEventListener('click', (e) => {
+    if (!document.getElementById('sports-gallery-menu').contains(e.target)) {
+      document.getElementById('sports-gallery-dropdown').classList.remove('show');
+    }
+    // ▼▼▼▼▼ 이 부분을 수정하세요 ▼▼▼▼▼
+    const boardLink = e.target.closest('.nav-link, .gallery-grid-item'); 
+    // ▲▲▲▲▲ 수정한 부분 ▲▲▲▲▲
+    if (boardLink && boardLink.dataset.board) { // 변수 이름도 navLink에서 boardLink로 변경
+      e.preventDefault();
+      renderBoardView(boardLink.dataset.board, 1);
+      document.getElementById('sports-gallery-dropdown').classList.remove('show');
+    }
+  });
+
+  document.getElementById('search-form').addEventListener('submit', handleSearchSubmit);
+  document.getElementById('write-post-btn').addEventListener('click', renderWriteView);
+  document.getElementById('ai-predict-btn').addEventListener('click', async () => {
+    const resultDiv = document.getElementById('ai-prediction-result');
+    resultDiv.textContent = 'AI가 분석 중입니다...';
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    resultDiv.textContent = '예측 결과를 표시할 예정입니다.';
+  });
+  document.getElementById('logo').addEventListener('click', renderMainView);
+  
+  renderMainView();
+</script>
+</body>
+</html>
