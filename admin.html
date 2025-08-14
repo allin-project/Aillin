@@ -163,73 +163,109 @@
                 </div>
             </div>
         </div>
-<h1>배너 관리</h1>
-<div class="card">
-    <h2>메인 페이지 배너 수정 (최대 5개)</h2>
-    <p style="margin-top:-0.5rem; margin-bottom:1.5rem; color:#64748b;">내용을 비워두는 항목은 배너에 표시되지 않습니다.</p>
-    <form id="banner-form">
-        <h4>#1</h4>
-        <div class="form-grid">
-            <div class="form-group"><label for="banner-title-1">배너 제목 1</label><input type="text" id="banner-title-1"></div>
-            <div class="form-group"><label for="banner-desc-1">배너 설명 1</label><input type="text" id="banner-desc-1"></div>
-        </div>
-        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
-        <h4>#2</h4>
-        <div class="form-grid">
-            <div class="form-group"><label for="banner-title-2">배너 제목 2</label><input type="text" id="banner-title-2"></div>
-            <div class="form-group"><label for="banner-desc-2">배너 설명 2</label><input type="text" id="banner-desc-2"></div>
-        </div>
-        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
-        <h4>#3</h4>
-        <div class="form-grid">
-            <div class="form-group"><label for="banner-title-3">배너 제목 3</label><input type="text" id="banner-title-3"></div>
-            <div class="form-group"><label for="banner-desc-3">배너 설명 3</label><input type="text" id="banner-desc-3"></div>
-        </div>
-        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
-        <h4>#4</h4>
-        <div class="form-grid">
-            <div class="form-group"><label for="banner-title-4">배너 제목 4</label><input type="text" id="banner-title-4"></div>
-            <div class="form-group"><label for="banner-desc-4">배너 설명 4</label><input type="text" id="banner-desc-4"></div>
-        </div>
-        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
-        <h4>#5</h4>
-        <div class="form-grid">
-            <div class="form-group"><label for="banner-title-5">배너 제목 5</label><input type="text" id="banner-title-5"></div>
-            <div class="form-group"><label for="banner-desc-5">배너 설명 5</label><input type="text" id="banner-desc-5"></div>
-        </div>
+<div id="banner-view" class="view">
+    <h1>배너 관리</h1>
+    <div class="card">
+        <h2>메인 페이지 배너 수정 (최대 5개)</h2>
+        <p style="margin-top:-0.5rem; margin-bottom:1.5rem; color:#64748b;">
+            제목, 설명, 이미지가 모두 있어야 배너에 표시됩니다.
+        </p>
+        <form id="banner-form">
+            <h4>#1</h4>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 200px; align-items: end; gap: 1.5rem;">
+                <div class="form-group"><label for="banner-title-1">배너 제목 1</label><input type="text" id="banner-title-1"></div>
+                <div class="form-group"><label for="banner-desc-1">배너 설명 1</label><input type="text" id="banner-desc-1"></div>
+                <div class="form-group">
+                    <label>배너 이미지 1</label>
+                    <img id="banner-preview-1" style="width:100%; height:80px; object-fit:cover; border-radius:0.5rem; margin-bottom:0.5rem; background-color:#e2e8f0; border: 1px solid #cbd5e1;">
+                    <input type="file" id="banner-image-1" accept="image/*">
+                </div>
+            </div>
+            <hr style="border-color:#f1f5f9; margin: 1rem 0;">
 
-        <div style="text-align: right; margin-top: 1.5rem;">
-            <button type="submit" class="btn btn-primary">전체 배너 저장하기</button>
-        </div>
-    </form>
+            <h4>#2</h4>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 200px; align-items: end; gap: 1.5rem;">
+                <div class="form-group"><label for="banner-title-2">배너 제목 2</label><input type="text" id="banner-title-2"></div>
+                <div class="form-group"><label for="banner-desc-2">배너 설명 2</label><input type="text" id="banner-desc-2"></div>
+                <div class="form-group">
+                    <label>배너 이미지 2</label>
+                    <img id="banner-preview-2" style="width:100%; height:80px; object-fit:cover; border-radius:0.5rem; margin-bottom:0.5rem; background-color:#e2e8f0; border: 1px solid #cbd5e1;">
+                    <input type="file" id="banner-image-2" accept="image/*">
+                </div>
+            </div>
+            <hr style="border-color:#f1f5f9; margin: 1rem 0;">
+
+            <h4>#3</h4>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 200px; align-items: end; gap: 1.5rem;">
+                <div class="form-group"><label for="banner-title-3">배너 제목 3</label><input type="text" id="banner-title-3"></div>
+                <div class="form-group"><label for="banner-desc-3">배너 설명 3</label><input type="text" id="banner-desc-3"></div>
+                <div class="form-group">
+                    <label>배너 이미지 3</label>
+                    <img id="banner-preview-3" style="width:100%; height:80px; object-fit:cover; border-radius:0.5rem; margin-bottom:0.5rem; background-color:#e2e8f0; border: 1px solid #cbd5e1;">
+                    <input type="file" id="banner-image-3" accept="image/*">
+                </div>
+            </div>
+            <hr style="border-color:#f1f5f9; margin: 1rem 0;">
+
+            <h4>#4</h4>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 200px; align-items: end; gap: 1.5rem;">
+                <div class="form-group"><label for="banner-title-4">배너 제목 4</label><input type="text" id="banner-title-4"></div>
+                <div class="form-group"><label for="banner-desc-4">배너 설명 4</label><input type="text" id="banner-desc-4"></div>
+                <div class="form-group">
+                    <label>배너 이미지 4</label>
+                    <img id="banner-preview-4" style="width:100%; height:80px; object-fit:cover; border-radius:0.5rem; margin-bottom:0.5rem; background-color:#e2e8f0; border: 1px solid #cbd5e1;">
+                    <input type="file" id="banner-image-4" accept="image/*">
+                </div>
+            </div>
+            <hr style="border-color:#f1f5f9; margin: 1rem 0;">
+
+            <h4>#5</h4>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 200px; align-items: end; gap: 1.5rem;">
+                <div class="form-group"><label for="banner-title-5">배너 제목 5</label><input type="text" id="banner-title-5"></div>
+                <div class="form-group"><label for="banner-desc-5">배너 설명 5</label><input type="text" id="banner-desc-5"></div>
+                <div class="form-group">
+                    <label>배너 이미지 5</label>
+                    <img id="banner-preview-5" style="width:100%; height:80px; object-fit:cover; border-radius:0.5rem; margin-bottom:0.5rem; background-color:#e2e8f0; border: 1px solid #cbd5e1;">
+                    <input type="file" id="banner-image-5" accept="image/*">
+                </div>
+            </div>
+            <div style="text-align: right; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">전체 배너 저장하기</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-    </main>
+</main>
 
 <script type="module">
     // Firebase SDKs
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { 
-        getFirestore, collection, getDocs, getDoc, doc, addDoc, setDoc, deleteDoc, 
-        query, where, orderBy, limit, serverTimestamp, increment 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+    getFirestore, collection, getDocs, getDoc, doc, addDoc, setDoc, deleteDoc, 
+    query, where, orderBy, limit, serverTimestamp, increment 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ✅ 아래 Storage 모듈 4개를 추가하세요.
+import { 
+    getStorage, ref, uploadBytes, getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     // Your web app's Firebase configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyAUuUlYHUwOuwnm_hsIsd7XHlj5voCecQk",
-      authDomain: "community-d18d4.firebaseapp.com",
-      projectId: "community-d18d4",
-      storageBucket: "community-d18d4.firebasestorage.app",
-      messagingSenderId: "497702481194",
-      appId: "1:497702481194:web:a826db91628adc24718253",
-      measurementId: "G-1SDLG2MEDN"
-    };
+  apiKey: "AIzaSyAUuUlYHUwOuwnm_hsIsd7XHlj5voCecQk",
+  authDomain: "community-d18d4.firebaseapp.com",
+  projectId: "community-d18d4",
+  storageBucket: "community-d18d4.firebasestorage.app", // <--- 이 부분을 수정하세요!
+  messagingSenderId: "497702481194",
+  appId: "1:497702481194:web:a826db91628adc24718253"
+};
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     // 컬렉션 참조
     const matchesCol = collection(db, 'matches');
@@ -476,24 +512,39 @@ postsTableBody.innerHTML += `
 // ==========================================================
 const bannerForm = document.getElementById('banner-form');
 
-// 배너 관리 탭이 로드될 때 현재 데이터를 불러오는 함수
+// 배너 관리 탭이 로드될 때 현재 데이터를 불러오고 이벤트 리스너를 설정하는 함수
 async function loadBannerManagement() {
     try {
         const bannerRef = doc(db, "site_config", "main_banner");
         const bannerSnap = await getDoc(bannerRef);
-        if (bannerSnap.exists() && bannerSnap.data().items) {
-            const items = bannerSnap.data().items;
-            for (let i = 0; i < 5; i++) {
-                const titleInput = document.getElementById(`banner-title-${i + 1}`);
-                const descInput = document.getElementById(`banner-desc-${i + 1}`);
-                if (items[i]) {
-                    titleInput.value = items[i].title || '';
-                    descInput.value = items[i].description || '';
-                } else {
-                    titleInput.value = '';
-                    descInput.value = '';
+        
+        const items = bannerSnap.exists() ? bannerSnap.data().items || [] : [];
+
+        for (let i = 0; i < 5; i++) {
+            const titleInput = document.getElementById(`banner-title-${i + 1}`);
+            const descInput = document.getElementById(`banner-desc-${i + 1}`);
+            const previewImg = document.getElementById(`banner-preview-${i + 1}`);
+            const fileInput = document.getElementById(`banner-image-${i + 1}`);
+
+            // 데이터 채우기
+            if (items[i]) {
+                titleInput.value = items[i].title || '';
+                descInput.value = items[i].description || '';
+                if (items[i].imageUrl) {
+                    previewImg.src = items[i].imageUrl;
                 }
+            } else {
+                titleInput.value = '';
+                descInput.value = '';
+                previewImg.src = ''; // 이미지 URL이 없을 경우 비움
             }
+
+            // 파일 선택 시 미리보기 업데이트
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files && fileInput.files[0]) {
+                    previewImg.src = URL.createObjectURL(fileInput.files[0]);
+                }
+            });
         }
     } catch (error) {
         console.error("배너 정보 로딩 오류:", error);
@@ -504,26 +555,57 @@ async function loadBannerManagement() {
 // 배너 저장 폼 제출 이벤트 처리
 bannerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+    const submitBtn = bannerForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '저장 중...';
+
     const bannerItems = [];
+
     for (let i = 1; i <= 5; i++) {
         const title = document.getElementById(`banner-title-${i}`).value.trim();
         const description = document.getElementById(`banner-desc-${i}`).value.trim();
+        const fileInput = document.getElementById(`banner-image-${i}`);
+        const previewImg = document.getElementById(`banner-preview-${i}`);
         
-        // 제목과 설명이 둘 다 입력된 경우에만 배열에 추가
+        // 제목, 설명, 이미지가 모두 있어야 유효한 배너로 간주
         if (title && description) {
-            bannerItems.push({ title, description });
+            let imageUrl = previewImg.src.startsWith('https') ? previewImg.src : null; // 기존 이미지 URL 유지
+
+            // 새 파일이 선택된 경우에만 업로드
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                const storageRef = ref(storage, `banners/${Date.now()}-${file.name}`);
+                try {
+                    submitBtn.textContent = `이미지 ${i} 업로드 중...`;
+                    const snapshot = await uploadBytes(storageRef, file);
+                    imageUrl = await getDownloadURL(snapshot.ref);
+                } catch (uploadError) {
+                    console.error(`배너 ${i} 이미지 업로드 실패:`, uploadError);
+                    alert(`배너 ${i}의 이미지 업로드에 실패했습니다.`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '전체 배너 저장하기';
+                    return; // 업로드 실패 시 중단
+                }
+            }
+
+            // 최종적으로 이미지 URL이 있는 경우에만 배너 아이템으로 추가
+            if (imageUrl) {
+                bannerItems.push({ title, description, imageUrl });
+            }
         }
     }
 
     try {
+        submitBtn.textContent = '정보 저장 중...';
         const bannerRef = doc(db, "site_config", "main_banner");
-        // items 라는 필드에 배열 전체를 저장
         await setDoc(bannerRef, { items: bannerItems });
         alert('배너가 성공적으로 업데이트되었습니다.');
     } catch (error) {
         console.error("배너 업데이트 오류:", error);
         alert('배너 업데이트에 실패했습니다.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '전체 배너 저장하기';
     }
 });
 // ========================================================

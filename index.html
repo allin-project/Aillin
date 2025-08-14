@@ -79,15 +79,49 @@ body {
 }
 
 .main-banner {
-    background: linear-gradient(to right, #4a418a, #7a4a9f);
-    color: white;
-    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden; /* 슬라이드를 위해 넘치는 부분은 숨김 */
     border-radius: var(--border-radius);
-    text-align: center;
     margin-bottom: 1.5rem;
+    padding: 0; /* ✅ 문제의 원인이었던 패딩을 0으로 수정합니다. */
+    background-color: var(--primary-dark); /* 이미지가 로딩되기 전의 배경색 */
 }
 .main-banner h2 { font-size: 1.6rem; margin: 0 0 0.5rem 0; font-weight: 700; }
 .main-banner p { margin: 0; font-size: 1rem; opacity: 0.9; }
+
+.banner-slide {
+    flex: 0 0 100%;
+    box-sizing: border-box;
+    min-height: 250px; /* 배너의 최소 높이 지정 */
+    border-radius: var(--border-radius);
+    padding: 2.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    
+    /* 배경 이미지 스타일 */
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+/* 이미지 위에 어두운 오버레이 추가 */
+.banner-slide::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background-color: rgba(0, 0, 0, 0.4); /* 40% 투명도의 검은색 오버레이 */
+    border-radius: var(--border-radius);
+    z-index: 1;
+}
+
+/* 텍스트가 오버레이 위에 오도록 설정 */
+.banner-text-overlay {
+    position: relative;
+    z-index: 2;
+    color: white;
+}
 
 .main-left { display: flex; flex-direction: column; gap: 1.5rem; }
 .main-right { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -295,9 +329,6 @@ footer {
     .container {
         padding: 0.5rem;
     }
-    .main-banner {
-        padding: 1.5rem 1rem;
-    }
     .main-banner h2 {
         font-size: 1.3rem;
     }
@@ -460,13 +491,13 @@ footer {
 
   // FIREBASE CONFIG
   const firebaseConfig = {
-    apiKey: "AIzaSyAUuUlYHUwOuwnm_hsIsd7XHlj5voCecQk",
-    authDomain: "community-d18d4.firebaseapp.com",
-    projectId: "community-d18d4",
-    storageBucket: "community-d18d4.appspot.com",
-    messagingSenderId: "497702481194",
-    appId: "1:497702481194:web:a826db91628adc24718253"
-  };
+  apiKey: "AIzaSyAUuUlYHUwOuwnm_hsIsd7XHlj5voCecQk",
+  authDomain: "community-d18d4.firebaseapp.com",
+  projectId: "community-d18d4",
+  storageBucket: "community-d18d4.firebasestorage.app", // <--- 이 부분을 수정하세요!
+  messagingSenderId: "497702481194",
+  appId: "1:497702481194:web:a826db91628adc24718253"
+};
 
   // FIREBASE INITIALIZATION
   const app = initializeApp(firebaseConfig);
@@ -509,7 +540,7 @@ footer {
 async function renderMainView() {
     showView('main-view');
     
-    // --- ▼▼▼ 배너 로직 (전체 교체) ▼▼▼ ---
+    // --- 배너 로직 (수정 없음) ---
     const slidesContainer = document.querySelector('.banner-slides-container');
     const prevBtn = document.getElementById('prev-banner-btn');
     const nextBtn = document.getElementById('next-banner-btn');
@@ -521,11 +552,13 @@ async function renderMainView() {
     }
 
     nextBtn.addEventListener('click', () => {
+        if (bannerItems.length === 0) return;
         currentIndex = (currentIndex + 1) % bannerItems.length;
         showBanner(currentIndex);
     });
 
     prevBtn.addEventListener('click', () => {
+        if (bannerItems.length === 0) return;
         currentIndex = (currentIndex - 1 + bannerItems.length) % bannerItems.length;
         showBanner(currentIndex);
     });
@@ -533,23 +566,35 @@ async function renderMainView() {
     try {
         const bannerRef = doc(db, "site_config", "main_banner");
         const bannerSnap = await getDoc(bannerRef);
+        
         if (bannerSnap.exists() && bannerSnap.data().items && bannerSnap.data().items.length > 0) {
             bannerItems = bannerSnap.data().items;
-            slidesContainer.innerHTML = ''; // 기존 내용 비우기
+            slidesContainer.innerHTML = ''; 
             bannerItems.forEach(item => {
                 const slide = document.createElement('div');
                 slide.className = 'banner-slide';
-                slide.innerHTML = `<h2>${item.title}</h2><p>${item.description}</p>`;
+                if (item.imageUrl) {
+                    slide.style.backgroundImage = `url('${item.imageUrl}')`;
+                }
+                slide.innerHTML = `
+                    <div class="banner-text-overlay">
+                        <h2>${item.title}</h2>
+                        <p>${item.description}</p>
+                    </div>`;
                 slidesContainer.appendChild(slide);
             });
-            // 버튼 표시 여부 결정
             const showButtons = bannerItems.length > 1;
             prevBtn.style.display = showButtons ? 'block' : 'none';
             nextBtn.style.display = showButtons ? 'block' : 'none';
             showBanner(0);
         } else {
-            // Firestore에 데이터가 없을 경우 기본값
-            slidesContainer.innerHTML = `<div class="banner-slide"><h2>올 인 人에 오신 것을 환영합니다</h2><p>자유롭게 소통하고 즐겨보세요!</p></div>`;
+            slidesContainer.innerHTML = `
+                <div class="banner-slide" style="background-color: #5f4b8b;">
+                    <div class="banner-text-overlay">
+                        <h2>올 인 人에 오신 것을 환영합니다</h2>
+                        <p>자유롭게 소통하고 즐겨보세요!</p>
+                    </div>
+                </div>`;
             prevBtn.style.display = 'none';
             nextBtn.style.display = 'none';
         }
@@ -559,12 +604,13 @@ async function renderMainView() {
         prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
     }
-    // --- ▲▲▲ 배너 로직 종료 ▲▲▲ ---
 
-    // --- ▼▼▼ 기존 위젯 렌더링 로직 (그대로 유지) ▼▼▼ ---
+    // --- ▼▼▼ 위젯 렌더링 로직 (if 조건문 제거) ▼▼▼ ---
     const leftCol = document.querySelector('#main-view .main-left');
     const rightCol = document.querySelector('#main-view .main-right');
-
+    
+    // ✅ 문제가 되었던 if (!leftCol.innerHTML.trim()) { ... } 조건문을 제거하여
+    // 항상 위젯이 그려지도록 수정했습니다.
     leftCol.innerHTML = `
         <div id="announcements-widget" class="widget"></div>
         <div id="popular-posts-widget" class="widget"></div>
@@ -574,18 +620,15 @@ async function renderMainView() {
             <div id="soccer-widget" class="widget"></div>
             <div id="baseball-widget" class="widget"></div>
             <div id="esports-widget" class="widget"></div>
-        </div>
-    `;
-
+        </div>`;
     rightCol.innerHTML = `
         <div id="sidebar-login-widget" class="widget"></div>
         <div class="prediction-widget-container widget"></div>
         <div id="sidebar-ranking-widget" class="widget">
             <div class="widget-header"><h2>실시간 갤러리 순위</h2></div>
             <div class="widget-body"><p style="text-align:center; color: var(--text-light);">순위 기능은 준비 중입니다.</p></div>
-        </div>
-    `;
-
+        </div>`;
+    
     renderBoardPreview('announcements-widget', 'announcements', '공지사항', 5);
     renderBoardPreview('popular-posts-widget', 'popular', '커뮤니티 인기글', 5);
     renderBoardPreview('freeboard-widget', 'freeboard', '자유게시판', 5);
@@ -802,66 +845,102 @@ async function renderMainView() {
         </tbody>
       </table>`;
     wirePostLinks(container);
+    document.getElementById('write-post-btn')?.addEventListener('click', renderWriteView);
   }
 
-  async function renderPostView(boardId, postId) {
-    showView('post-view');
-    appState.currentBoard = boardId;
-    appState.currentPostId = postId;
-    const postRef = doc(db, "posts", postId);
-    await safeUpdateViewCount(postRef);
-    const postSnap = await getDoc(postRef);
+async function renderPostView(boardId, postId) {
+  showView('post-view');
+  appState.currentBoard = boardId;
+  appState.currentPostId = postId;
 
-    if (!postSnap.exists()) {
-      alert("게시물을 찾을 수 없습니다.");
-      return renderBoardView(boardId, 1);
-    }
-    const post = postSnap.data();
-    const container = document.getElementById('post-view');
-    const formatDate = (ts) => ts ? new Date(ts.seconds * 1000).toLocaleString('ko-KR') : '';
-    const isAuthor = appState.currentUser && appState.currentUser.uid === post.authorId;
-    const authorButtons = `<button id="edit-post-btn" class="write-btn">수정</button> <button id="delete-post-btn" class="write-btn">삭제</button>`;
-    const imageHtml = post.imageUrl ? `<img src="${post.imageUrl}" alt="${post.title}" style="max-width: 100%; margin: 1rem 0;">` : '';
+  const postRef = doc(db, "posts", postId);
+  await safeUpdateViewCount(postRef);
+  const postSnap = await getDoc(postRef);
 
-    container.innerHTML = `
-      <div id="post-content-view">
-        <div class="post-header">
-          <h1>${post.title}</h1>
-          <div id="post-meta"><b>글쓴이:</b> ${post.authorName} | <b>작성일:</b> ${formatDate(post.createdAt)} | <b>조회:</b> ${post.views || 0}</div>
-        </div>
-        <div id="post-body" style="padding: 1.5rem; font-size: 1.05em; line-height: 1.8; min-height: 200px;">
-          ${imageHtml}
-          ${post.content.replace(/\n/g, '<br>')}
-        </div>
-        <div id="vote-bar" style="padding: 1rem; display:flex; justify-content: center; gap: 0.5rem; align-items:center; border-top: 1px solid var(--border-color);">
-          <button id="like-btn" class="write-btn">👍 추천 <span id="like-count">${post.likes || 0}</span></button>
-          <button id="dislike-btn" class="write-btn">👎 비추천 <span id="dislike-count">${post.dislikes || 0}</span></button>
-        </div>
-        <div class="post-actions" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; background-color: var(--background-widget-header);">
-          <button id="back-to-list-btn" class="write-btn">목록</button>
-          <div class="author-actions">${isAuthor ? authorButtons : ''}</div>
-        </div>
+  if (!postSnap.exists()) {
+    alert("게시물을 찾을 수 없습니다.");
+    return renderBoardView(boardId, 1);
+  }
+
+  const post = postSnap.data();
+  const container = document.getElementById('post-view');
+  const formatDate = (ts) => ts ? new Date(ts.seconds * 1000).toLocaleString('ko-KR') : '';
+  const isAuthor = appState.currentUser && appState.currentUser.uid === post.authorId;
+  const authorButtons = `<button id="edit-post-btn" class="write-btn">수정</button> <button id="delete-post-btn" class="write-btn">삭제</button>`;
+
+  // 갤러리 HTML 먼저 문자열로 준비
+  const imgList = Array.isArray(post.imageUrls) ? post.imageUrls : (post.imageUrl ? [post.imageUrl] : []);
+  const imageHtml = imgList.length ? `
+    <div class="post-gallery" style="margin:1rem 0;">
+      <div class="post-gallery-main" style="position:relative;">
+        <img id="post-gallery-main-img" src="${imgList[0]}" alt="${post.title}" 
+             style="width:100%; max-height:520px; object-fit:contain; background:#f7f7fa; border:1px solid var(--border-color); border-radius:6px;">
+        ${imgList.length > 1 ? `
+        <button id="pg-prev" class="banner-nav-btn" style="left:8px;">‹</button>
+        <button id="pg-next" class="banner-nav-btn" style="right:8px;">›</button>` : ``}
       </div>
-      <div id="comments-section">
-        <h3>댓글</h3>
-        <ul id="comments-list"></ul>
-        ${appState.currentUser ? `
-        <form id="comment-form" class="comment-form" style="padding:1rem; border-top:1px solid var(--border-color); display:flex; gap:0.5rem;">
-          <textarea id="comment-text" placeholder="댓글을 입력하세요..." required style="flex-grow: 1; border: 1px solid var(--border-color); padding: 5px; resize: vertical; min-height: 50px;"></textarea>
-          <button type="submit" class="write-btn primary">등록</button>
-        </form>
-        ` : `<p style="text-align:center; padding: 1rem; background-color: var(--background-widget-header);">댓글을 작성하려면 로그인이 필요합니다.</p>`}
-      </div>`;
+      ${imgList.length > 1 ? `
+      <div class="post-gallery-thumbs" style="display:flex; gap:.5rem; margin-top:.5rem; overflow-x:auto; padding-bottom:.25rem;">
+        ${imgList.map((u,i)=>`
+          <img data-idx="${i}" src="${u}" style="width:80px;height:80px;object-fit:cover;border:1px solid var(--border-color);border-radius:6px;cursor:pointer;">
+        `).join('')}
+      </div>` : ``}
+    </div>
+  ` : '';
 
-    setupVoteUI(postId);
-    renderComments(postId);
-    document.getElementById('back-to-list-btn').addEventListener('click', () => renderBoardView(boardId, 1));
-    if (appState.currentUser) document.getElementById('comment-form')?.addEventListener('submit', (e) => handleCommentSubmit(e, postId));
-    if (isAuthor) {
-      document.getElementById('edit-post-btn')?.addEventListener('click', () => renderEditView(postId));
-      document.getElementById('delete-post-btn')?.addEventListener('click', () => handlePostDelete(postId, boardId));
-    }
+  // 1) DOM 그리기
+  container.innerHTML = `
+    <div id="post-content-view">
+      <div class="post-header">
+        <h1>${post.title}</h1>
+        <div id="post-meta"><b>글쓴이:</b> ${post.authorName} | <b>작성일:</b> ${formatDate(post.createdAt)} | <b>조회:</b> ${post.views || 0}</div>
+      </div>
+      <div id="post-body" style="padding: 1.5rem; font-size: 1.05em; line-height: 1.8; min-height: 200px;">
+        ${imageHtml}
+        ${(post.content || '').replace(/\n/g, '<br>')}
+      </div>
+      <div id="vote-bar" style="padding: 1rem; display:flex; justify-content: center; gap: 0.5rem; align-items:center; border-top: 1px solid var(--border-color);">
+        <button id="like-btn" class="write-btn">👍 추천 <span id="like-count">${post.likes || 0}</span></button>
+        <button id="dislike-btn" class="write-btn">👎 비추천 <span id="dislike-count">${post.dislikes || 0}</span></button>
+      </div>
+      <div class="post-actions" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; background-color: var(--background-widget-header);">
+        <button id="back-to-list-btn" class="write-btn">목록</button>
+        <div class="author-actions">${isAuthor ? authorButtons : ''}</div>
+      </div>
+    </div>
+    <div id="comments-section">
+      <h3>댓글</h3>
+      <ul id="comments-list"></ul>
+      ${appState.currentUser ? `
+      <form id="comment-form" class="comment-form" style="padding:1rem; border-top:1px solid var(--border-color); display:flex; gap:0.5rem;">
+        <textarea id="comment-text" placeholder="댓글을 입력하세요..." required style="flex-grow: 1; border: 1px solid var(--border-color); padding: 5px; resize: vertical; min-height: 50px;"></textarea>
+        <button type="submit" class="write-btn primary">등록</button>
+      </form>
+      ` : `<p style="text-align:center; padding: 1rem; background-color: var(--background-widget-header);">댓글을 작성하려면 로그인이 필요합니다.</p>`}
+    </div>`;
+
+  // 2) DOM이 생성된 후에 이벤트 바인딩
+  if (imgList.length > 0) {
+    const mainImg = document.getElementById('post-gallery-main-img');
+    let cur = 0;
+    const show = (i) => { cur = (i + imgList.length) % imgList.length; mainImg.src = imgList[cur]; };
+    document.getElementById('pg-prev')?.addEventListener('click', ()=> show(cur-1));
+    document.getElementById('pg-next')?.addEventListener('click', ()=> show(cur+1));
+    document.querySelectorAll('.post-gallery-thumbs img').forEach(el=>{
+      el.addEventListener('click', ()=> show(parseInt(el.dataset.idx,10)));
+    });
   }
+
+  setupVoteUI(postId);
+  renderComments(postId);
+
+  document.getElementById('back-to-list-btn').addEventListener('click', () => renderBoardView(boardId, 1));
+  if (appState.currentUser) document.getElementById('comment-form')?.addEventListener('submit', (e) => handleCommentSubmit(e, postId));
+  if (isAuthor) {
+    document.getElementById('edit-post-btn')?.addEventListener('click', () => renderEditView(postId));
+    document.getElementById('delete-post-btn')?.addEventListener('click', () => handlePostDelete(postId, boardId));
+  }
+}
 
   async function renderEditView(postId) {
     const postRef = doc(db, "posts", postId);
@@ -899,10 +978,14 @@ async function renderMainView() {
         <h2 style="padding:0.75rem 1rem; margin:0; border-bottom:1px solid var(--border-color); background:var(--background-widget-header);">${boardNames[appState.currentBoard]} 글쓰기</h2>
         <form id="write-form" style="padding:1rem;">
           <input type="text" id="write-title" placeholder="제목" required style="width:100%; padding:8px; border:1px solid var(--border-color); margin-bottom:0.5rem;">
-          <div style="margin-bottom: 0.5rem;">
-            <label for="write-image" style="font-weight: 500; display: block; margin-bottom: .25rem;">이미지 (선택)</label>
-            <input type="file" id="write-image" accept="image/*">
-          </div>
+          <div style="margin-bottom: 0.75rem;">
+  <label for="write-images" style="font-weight: 500; display: block; margin-bottom: .25rem;">
+    이미지 (선택, 여러 장 가능)
+  </label>
+  <input type="file" id="write-images" accept="image/*" multiple>
+  <div id="write-image-preview" style="display:flex; gap:.5rem; margin-top:.5rem; flex-wrap:wrap;"></div>
+  <small style="color:#888;">TIP: Ctrl/Shift로 여러 장 선택. (권장 10장 이하)</small>
+</div>
           <textarea id="write-content" placeholder="내용" required style="width:100%; min-height:300px; padding:8px; border:1px solid var(--border-color); margin-bottom:1rem;"></textarea>
           <div style="text-align:right; display:flex; justify-content:flex-end; gap:0.5rem;">
             <button type="button" id="cancel-write-btn" class="write-btn">취소</button>
@@ -911,9 +994,78 @@ async function renderMainView() {
         </form>
       </div>`;
 
-    document.getElementById('write-form').addEventListener('submit', handlePostSubmit);
-    document.getElementById('cancel-write-btn').addEventListener('click', () => renderBoardView(appState.currentBoard, 1));
+    // ✅ 여기서 바인딩
+  const imgInput = document.getElementById('write-images');
+  const preview = document.getElementById('write-image-preview');
+  imgInput.addEventListener('change', () => {
+    preview.innerHTML = '';
+    const files = Array.from(imgInput.files || []);
+    files.forEach(file => {
+      const url = URL.createObjectURL(file);
+      const thumb = document.createElement('img');
+      thumb.src = url;
+      thumb.style = "width:90px;height:90px;object-fit:cover;border:1px solid var(--border-color);border-radius:6px;";
+      preview.appendChild(thumb);
+    });
+  });
+
+  document.getElementById('write-form').addEventListener('submit', handlePostSubmit);
+  document.getElementById('cancel-write-btn').addEventListener('click', () => renderBoardView(appState.currentBoard, 1));
   }
+
+
+async function uploadImagesAndGetUrls(files) {
+  const urls = [];
+  for (const f of files) {
+    const path = `images/${Date.now()}-${Math.random().toString(36).slice(2)}-${f.name}`;
+    const storageRefObj = ref(storage, path);
+    const result = await uploadBytes(storageRefObj, f);
+    const dl = await getDownloadURL(result.ref);
+    urls.push(dl);
+  }
+  return urls;
+}
+
+async function handleVote(postId, value) {
+  const user = appState.currentUser;
+  if (!user) { alert("로그인이 필요합니다."); return; }
+
+  const postRef = doc(db, "posts", postId);
+  const voteRef = doc(db, "posts", postId, "votes", user.uid);
+
+  try {
+    await runTransaction(db, async (tx) => {
+      const [postSnap, voteSnap] = await Promise.all([tx.get(postRef), tx.get(voteRef)]);
+      if (!postSnap.exists()) throw new Error("Post not found");
+
+      let { likes = 0, dislikes = 0 } = postSnap.data();
+
+      if (!voteSnap.exists()) {
+        if (value === 1) likes++; else dislikes++;
+        tx.set(voteRef, { value });
+      } else {
+        const prev = voteSnap.data().value;
+        if (prev === value) {
+          if (value === 1) likes--; else dislikes--;
+          tx.delete(voteRef);
+        } else {
+          if (value === 1) { likes++; dislikes--; } else { dislikes++; likes--; }
+          tx.update(voteRef, { value });
+        }
+      }
+      tx.update(postRef, { likes, dislikes });
+    });
+
+    // 카운트 UI만 최신화
+    const latest = (await getDoc(postRef)).data();
+    document.getElementById('like-count').textContent = latest.likes || 0;
+    document.getElementById('dislike-count').textContent = latest.dislikes || 0;
+  } catch (e) {
+    console.error(e);
+    alert("투표 처리 중 오류가 발생했습니다.");
+  }
+}
+
    async function renderComments(postId) {
     const commentsList = document.getElementById('comments-list');
     if (!commentsList) return;
@@ -966,74 +1118,72 @@ async function renderMainView() {
     parentCommentItem.appendChild(formContainer);
     formContainer.querySelector('textarea').focus();
   }
+
   async function setupVoteUI(postId) {
-    const likeBtn = document.getElementById('like-btn');
-    const dislikeBtn = document.getElementById('dislike-btn');
-    if (!likeBtn || !dislikeBtn) return;
+  const likeBtn = document.getElementById('like-btn');
+  const dislikeBtn = document.getElementById('dislike-btn');
+  if (!likeBtn || !dislikeBtn) return;
+
+  if (!likeBtn.__wired) {
+    likeBtn.__wired = true;
+    dislikeBtn.__wired = true;
     likeBtn.addEventListener('click', () => handleVote(postId, 1));
     dislikeBtn.addEventListener('click', () => handleVote(postId, -1));
-    const user = appState.currentUser; if (!user) return;
-    const voteRef = doc(db, "posts", postId, "votes", user.uid);
-    const snap = await getDoc(voteRef);
-    if (snap.exists()) {
-      const v = snap.data().value;
-      if (v === 1) { likeBtn.style.backgroundColor = 'var(--primary-light)'; likeBtn.style.borderColor = 'var(--primary-dark)';}
-      if (v === -1) { dislikeBtn.style.backgroundColor = 'var(--primary-light)'; dislikeBtn.style.borderColor = 'var(--primary-dark)';}
-    }
   }
 
-  async function handleVote(postId, value) {
-    const user = appState.currentUser; if (!user) { alert("로그인이 필요합니다."); return; }
-    const postRef = doc(db, "posts", postId);
-    const voteRef = doc(db, "posts", postId, "votes", user.uid);
-    try {
-      await runTransaction(db, async (tx) => {
-        const [postSnap, voteSnap] = await Promise.all([tx.get(postRef), tx.get(voteRef)]);
-        if (!postSnap.exists()) throw new Error("Post not found");
-        let { likes = 0, dislikes = 0 } = postSnap.data();
-        if (!voteSnap.exists()) {
-          if (value === 1) likes++; else dislikes++;
-          tx.set(voteRef, { value });
-        } else {
-          const prev = voteSnap.data().value;
-          if (prev === value) {
-            if (value === 1) likes--; else dislikes--;
-            tx.delete(voteRef);
-          } else {
-            if (value === 1) { likes++; dislikes--; } else { dislikes++; likes--; }
-            tx.update(voteRef, { value });
-          }
-        }
-        tx.update(postRef, { likes, dislikes });
-      });
-      const latest = (await getDoc(postRef)).data();
-      document.getElementById('like-count').textContent = latest.likes || 0;
-      document.getElementById('dislike-count').textContent = latest.dislikes || 0;
-      setupVoteUI(postId);
-    } catch (e) { console.error(e); alert("투표 처리 중 오류가 발생했습니다."); }
+  const user = appState.currentUser; 
+  if (!user) return;
+  const voteRef = doc(db, "posts", postId, "votes", user.uid);
+  const snap = await getDoc(voteRef);
+  if (snap.exists()) {
+    const v = snap.data().value;
+    if (v === 1) { likeBtn.style.backgroundColor = 'var(--primary-light)'; likeBtn.style.borderColor = 'var(--primary-dark)';}
+    if (v === -1) { dislikeBtn.style.backgroundColor = 'var(--primary-light)'; dislikeBtn.style.borderColor = 'var(--primary-dark)';}
   }
+}
   async function handlePostSubmit(e) {
-    e.preventDefault();
-    const title = document.getElementById('write-title').value; const content = document.getElementById('write-content').value;
-    const imageFile = document.getElementById('write-image')?.files[0];
-    const user = appState.currentUser; if (!user) return alert("로그인이 필요합니다.");
-    const submitBtn = document.getElementById('submit-post-btn'); submitBtn.disabled = true; submitBtn.textContent = '등록 중...';
-    try {
-      let imageUrl = null;
-      if (imageFile) {
-        submitBtn.textContent = '이미지 업로드 중...';
-        const storageRef = ref(storage, `images/${Date.now()}-${imageFile.name}`);
-        const uploadResult = await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(uploadResult.ref);
-      }
-      const postData = { title, content, imageUrl, authorId: user.uid, authorName: user.nickname, board: appState.currentBoard, createdAt: serverTimestamp(), views: 0, likes: 0, dislikes: 0, commentCount: 0 };
-      await addDoc(collection(db, 'posts'), postData);
-      alert("게시물이 등록되었습니다."); renderBoardView(appState.currentBoard, 1);
-    } catch (error) {
-      console.error("게시물 등록 오류: ", error); alert("게시물 등록에 실패했습니다.");
-      submitBtn.disabled = false; submitBtn.textContent = '등록';
+  e.preventDefault();
+  const title = document.getElementById('write-title').value;
+  const content = document.getElementById('write-content').value;
+  const user = appState.currentUser; 
+  if (!user) return alert("로그인이 필요합니다.");
+
+  const submitBtn = document.getElementById('submit-post-btn');
+  submitBtn.disabled = true; 
+  submitBtn.textContent = '등록 중...';
+
+  try {
+    // 여러 장 업로드
+    const files = Array.from(document.getElementById('write-images')?.files || []);
+    let imageUrls = [];
+    if (files.length) {
+      submitBtn.textContent = `이미지 업로드 중... (${files.length}장)`;
+      imageUrls = await uploadImagesAndGetUrls(files);
     }
+
+    const postData = {
+      title,
+      content,
+      // 호환성: 예전 코드가 쓰는 단일 필드도 함께 기록
+      imageUrl: imageUrls[0] || null,
+      imageUrls,
+      authorId: user.uid,
+      authorName: user.nickname,
+      board: appState.currentBoard,
+      createdAt: serverTimestamp(),
+      views: 0, likes: 0, dislikes: 0, commentCount: 0
+    };
+
+    await addDoc(collection(db, 'posts'), postData);
+    alert("게시물이 등록되었습니다.");
+    renderBoardView(appState.currentBoard, 1);
+  } catch (error) {
+    console.error("게시물 등록 오류: ", error);
+    alert("게시물 등록에 실패했습니다.");
+    submitBtn.disabled = false; 
+    submitBtn.textContent = '등록';
   }
+}
   async function handlePostUpdate(e) {
     e.preventDefault();
     const postId = e.target.dataset.postId;
