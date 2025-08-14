@@ -62,7 +62,7 @@
             <a href="#" class="admin-nav-link active" data-view="dashboard-view">대시보드</a>
             <a href="#" class="admin-nav-link" data-view="match-view">경기 관리</a>
             <a href="#" class="admin-nav-link" data-view="post-view">게시물 관리</a>
-            <a href="#" class="admin-nav-link" data-view="photo-view">포토 갤러리 관리</a>
+            <a href="#" class="admin-nav-link" data-view="banner-view">배너 관리</a>
         </nav>
         <div class="admin-sidebar-footer">
             <a href="index.html">메인 사이트로 가기</a>
@@ -71,6 +71,8 @@
     </aside>
 
     <main class="admin-main">
+        <div id="admin-view" class="view">
+    </div>
         
         <div id="dashboard-view" class="view active">
             <h1>대시보드</h1>
@@ -161,13 +163,46 @@
                 </div>
             </div>
         </div>
-
-        <div id="photo-view" class="view">
-             <h1>포토 갤러리 관리</h1>
-             <div class="card">
-                 <p>포토 갤러리 기능은 다음 단계에서 구현될 예정입니다.</p>
-            </div>
+<h1>배너 관리</h1>
+<div class="card">
+    <h2>메인 페이지 배너 수정 (최대 5개)</h2>
+    <p style="margin-top:-0.5rem; margin-bottom:1.5rem; color:#64748b;">내용을 비워두는 항목은 배너에 표시되지 않습니다.</p>
+    <form id="banner-form">
+        <h4>#1</h4>
+        <div class="form-grid">
+            <div class="form-group"><label for="banner-title-1">배너 제목 1</label><input type="text" id="banner-title-1"></div>
+            <div class="form-group"><label for="banner-desc-1">배너 설명 1</label><input type="text" id="banner-desc-1"></div>
         </div>
+        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
+        <h4>#2</h4>
+        <div class="form-grid">
+            <div class="form-group"><label for="banner-title-2">배너 제목 2</label><input type="text" id="banner-title-2"></div>
+            <div class="form-group"><label for="banner-desc-2">배너 설명 2</label><input type="text" id="banner-desc-2"></div>
+        </div>
+        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
+        <h4>#3</h4>
+        <div class="form-grid">
+            <div class="form-group"><label for="banner-title-3">배너 제목 3</label><input type="text" id="banner-title-3"></div>
+            <div class="form-group"><label for="banner-desc-3">배너 설명 3</label><input type="text" id="banner-desc-3"></div>
+        </div>
+        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
+        <h4>#4</h4>
+        <div class="form-grid">
+            <div class="form-group"><label for="banner-title-4">배너 제목 4</label><input type="text" id="banner-title-4"></div>
+            <div class="form-group"><label for="banner-desc-4">배너 설명 4</label><input type="text" id="banner-desc-4"></div>
+        </div>
+        <hr style="border-color:#f1f5f9; margin: 1rem 0;">
+        <h4>#5</h4>
+        <div class="form-grid">
+            <div class="form-group"><label for="banner-title-5">배너 제목 5</label><input type="text" id="banner-title-5"></div>
+            <div class="form-group"><label for="banner-desc-5">배너 설명 5</label><input type="text" id="banner-desc-5"></div>
+        </div>
+
+        <div style="text-align: right; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">전체 배너 저장하기</button>
+        </div>
+    </form>
+</div>
 
     </main>
 
@@ -208,28 +243,38 @@
     };
 
     // --- 대시보드 로직 (변경 없음) ---
-    async function loadDashboard() {
-        try {
-            const statsSnap = await getDoc(siteStatsDoc);
-            if (statsSnap.exists()) {
-                const stats = statsSnap.data();
-                document.getElementById('total-posts-stat').innerText = stats.totalPosts || 0;
-                document.getElementById('total-matches-stat').innerText = stats.totalMatches || 0;
-                document.getElementById('total-users-stat').innerText = stats.totalUsers || 0;
-            }
-            const recentPostsQuery = query(postsCol, orderBy('createdAt', 'desc'), limit(5));
-            const querySnapshot = await getDocs(recentPostsQuery);
-            const tableBody = document.getElementById('recent-posts-table');
-            tableBody.innerHTML = '';
-            querySnapshot.forEach(doc => {
-                const post = doc.data();
-                tableBody.innerHTML += `<tr><td>[${post.board}] ${post.title}</td><td>${post.author}</td><td>${formatDate(post.createdAt)}</td></tr>`;
-            });
-        } catch (error) {
-            console.error("대시보드 로딩 오류:", error);
-            alert("대시보드 정보를 가져오는 데 실패했습니다.");
+// admin.html의 <script> 태그 내부
+
+async function loadDashboard() {
+    try {
+        // 기존 siteStats 문서 로직 (게시물, 경기 수)
+        const statsSnap = await getDoc(siteStatsDoc);
+        if (statsSnap.exists()) {
+            const stats = statsSnap.data();
+            document.getElementById('total-posts-stat').innerText = stats.totalPosts || 0;
+            document.getElementById('total-matches-stat').innerText = stats.totalMatches || 0;
+            // document.getElementById('total-users-stat').innerText = stats.totalUsers || 0; // 이 줄은 삭제하거나 주석 처리
         }
+
+        // ✅ users 컬렉션 직접 카운트 로직 추가
+        const usersCol = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersCol);
+        document.getElementById('total-users-stat').innerText = usersSnapshot.size;
+
+        // 최근 등록된 게시물 로직 (기존과 동일)
+        const recentPostsQuery = query(postsCol, orderBy('createdAt', 'desc'), limit(5));
+        const querySnapshot = await getDocs(recentPostsQuery);
+        const tableBody = document.getElementById('recent-posts-table');
+        tableBody.innerHTML = '';
+        querySnapshot.forEach(doc => {
+            const post = doc.data();
+            tableBody.innerHTML += `<tr><td>[${post.board}] ${post.title}</td><td>${post.authorName}</td><td>${formatDate(post.createdAt)}</td></tr>`;
+        });
+    } catch (error) {
+        console.error("대시보드 로딩 오류:", error);
+        alert("대시보드 정보를 가져오는 데 실패했습니다.");
     }
+}
 
     // ==========================================================
     // === 경기 관리 로직: START (이 부분이 수정되었습니다) ===
@@ -390,14 +435,14 @@
         postsTableBody.innerHTML = '';
         querySnapshot.forEach(doc => {
             const post = doc.data();
-            postsTableBody.innerHTML += `
-                 <tr data-id="${doc.id}">
-                    <td>${doc.id}</td>
-                    <td>${post.title}</td>
-                    <td>${post.author}</td>
-                    <td>${formatDate(post.createdAt)}</td>
-                    <td><button class="btn btn-danger btn-delete-post">삭제</button></td>
-                </tr>`;
+postsTableBody.innerHTML += `
+    <tr data-id="${doc.id}">
+        <td>${doc.id}</td>
+        <td>${post.title}</td>
+        <td>${post.authorName}</td>
+        <td>${formatDate(post.createdAt)}</td>
+        <td><button class="btn btn-danger btn-delete-post">삭제</button></td>
+    </tr>`;
         });
     }
 
@@ -424,6 +469,68 @@
     });
 
 
+
+
+  // ==========================================================
+// === 배너 관리 로직: START (이 전체를 교체해주세요) ===
+// ==========================================================
+const bannerForm = document.getElementById('banner-form');
+
+// 배너 관리 탭이 로드될 때 현재 데이터를 불러오는 함수
+async function loadBannerManagement() {
+    try {
+        const bannerRef = doc(db, "site_config", "main_banner");
+        const bannerSnap = await getDoc(bannerRef);
+        if (bannerSnap.exists() && bannerSnap.data().items) {
+            const items = bannerSnap.data().items;
+            for (let i = 0; i < 5; i++) {
+                const titleInput = document.getElementById(`banner-title-${i + 1}`);
+                const descInput = document.getElementById(`banner-desc-${i + 1}`);
+                if (items[i]) {
+                    titleInput.value = items[i].title || '';
+                    descInput.value = items[i].description || '';
+                } else {
+                    titleInput.value = '';
+                    descInput.value = '';
+                }
+            }
+        }
+    } catch (error) {
+        console.error("배너 정보 로딩 오류:", error);
+        alert("기존 배너 정보를 불러오는 데 실패했습니다.");
+    }
+}
+
+// 배너 저장 폼 제출 이벤트 처리
+bannerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const bannerItems = [];
+    for (let i = 1; i <= 5; i++) {
+        const title = document.getElementById(`banner-title-${i}`).value.trim();
+        const description = document.getElementById(`banner-desc-${i}`).value.trim();
+        
+        // 제목과 설명이 둘 다 입력된 경우에만 배열에 추가
+        if (title && description) {
+            bannerItems.push({ title, description });
+        }
+    }
+
+    try {
+        const bannerRef = doc(db, "site_config", "main_banner");
+        // items 라는 필드에 배열 전체를 저장
+        await setDoc(bannerRef, { items: bannerItems });
+        alert('배너가 성공적으로 업데이트되었습니다.');
+    } catch (error) {
+        console.error("배너 업데이트 오류:", error);
+        alert('배너 업데이트에 실패했습니다.');
+    }
+});
+// ========================================================
+// === 배너 관리 로직: END (여기까지 교체) ===
+// ========================================================
+
+
     // --- 네비게이션 및 초기화 로직 (변경 없음) ---
     const nav = document.getElementById('admin-nav');
     const views = document.querySelectorAll('.view');
@@ -447,6 +554,7 @@
         await loadDashboard();
         await loadMatches();
         await loadPosts(boardSelect.value); // 초기 선택된 게시판 로드
+        await loadBannerManagement();
     }
 
     init(); // 초기화 함수 실행

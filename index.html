@@ -238,6 +238,47 @@ footer {
     display: none;
 }
 
+
+/* 배너 추가했잖아  */
+/* index.html 파일의 <style> 태그 안 적절한 위치에 추가 */
+
+.main-banner {
+    position: relative;
+    overflow: hidden; /* 슬라이드를 위해 넘치는 부분은 숨김 */
+}
+
+.banner-slides-container {
+    display: flex;
+    transition: transform 0.5s ease-in-out; /* 부드러운 슬라이드 효과 */
+}
+
+.banner-slide {
+    flex: 0 0 100%; /* 각 슬라이드는 배너 너비의 100%를 차지 */
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.banner-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+}
+.banner-nav-btn:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+#prev-banner-btn { left: 15px; }
+#next-banner-btn { right: 15px; }
+
 /* 992px 이하 모바일/태블릿 화면일 때 */
 @media (max-width: 992px) {
     /* 오른쪽 사이드바는 이미 숨겨져 있으므로,
@@ -307,6 +348,9 @@ footer {
     }
 }
 
+
+
+
     </style>
 </head>
 <body>
@@ -335,12 +379,18 @@ footer {
 
     <main>
       <div id="main-view" class="view active">
-          <div class="main-banner">
-              <div class="banner-content">
-                  <h2>스스로 의심하지 또 의심해!</h2>
-                  <p>그래야 댓글이 될 수 있어!</p>
-              </div>
-          </div>
+<div class="main-banner">
+    <div class="banner-content">
+        <div class="banner-slides-container">
+            <div class="banner-slide">
+                 <h2>배너 로딩 중...</h2>
+                 <p>잠시만 기다려주세요.</p>
+            </div>
+        </div>
+    </div>
+    <button id="prev-banner-btn" class="banner-nav-btn">‹</button>
+    <button id="next-banner-btn" class="banner-nav-btn">›</button>
+</div>
           <div class="main-grid">
             <div class="main-left">
                 <!-- Left widgets are rendered here by JS -->
@@ -454,18 +504,71 @@ footer {
 
 // renderMainView 함수를 아래와 같이 수정하세요.
 
+// index.html 파일의 기존 renderMainView 함수 전체를 아래 코드로 교체
+
 async function renderMainView() {
     showView('main-view');
+    
+    // --- ▼▼▼ 배너 로직 (전체 교체) ▼▼▼ ---
+    const slidesContainer = document.querySelector('.banner-slides-container');
+    const prevBtn = document.getElementById('prev-banner-btn');
+    const nextBtn = document.getElementById('next-banner-btn');
+    let bannerItems = [];
+    let currentIndex = 0;
+
+    function showBanner(index) {
+        slidesContainer.style.transform = `translateX(-${index * 100}%)`;
+    }
+
+    nextBtn.addEventListener('click', () => {
+        currentIndex = (currentIndex + 1) % bannerItems.length;
+        showBanner(currentIndex);
+    });
+
+    prevBtn.addEventListener('click', () => {
+        currentIndex = (currentIndex - 1 + bannerItems.length) % bannerItems.length;
+        showBanner(currentIndex);
+    });
+
+    try {
+        const bannerRef = doc(db, "site_config", "main_banner");
+        const bannerSnap = await getDoc(bannerRef);
+        if (bannerSnap.exists() && bannerSnap.data().items && bannerSnap.data().items.length > 0) {
+            bannerItems = bannerSnap.data().items;
+            slidesContainer.innerHTML = ''; // 기존 내용 비우기
+            bannerItems.forEach(item => {
+                const slide = document.createElement('div');
+                slide.className = 'banner-slide';
+                slide.innerHTML = `<h2>${item.title}</h2><p>${item.description}</p>`;
+                slidesContainer.appendChild(slide);
+            });
+            // 버튼 표시 여부 결정
+            const showButtons = bannerItems.length > 1;
+            prevBtn.style.display = showButtons ? 'block' : 'none';
+            nextBtn.style.display = showButtons ? 'block' : 'none';
+            showBanner(0);
+        } else {
+            // Firestore에 데이터가 없을 경우 기본값
+            slidesContainer.innerHTML = `<div class="banner-slide"><h2>올 인 人에 오신 것을 환영합니다</h2><p>자유롭게 소통하고 즐겨보세요!</p></div>`;
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+        }
+    } catch (error) {
+        console.error("배너 로딩 실패:", error);
+        slidesContainer.innerHTML = `<div class="banner-slide"><h2>배너를 불러오는 데 실패했습니다.</h2></div>`;
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+    }
+    // --- ▲▲▲ 배너 로직 종료 ▲▲▲ ---
+
+    // --- ▼▼▼ 기존 위젯 렌더링 로직 (그대로 유지) ▼▼▼ ---
     const leftCol = document.querySelector('#main-view .main-left');
     const rightCol = document.querySelector('#main-view .main-right');
 
-    // 왼쪽 영역: 모바일 화면을 위해 예측 위젯 컨테이너를 추가합니다.
     leftCol.innerHTML = `
         <div id="announcements-widget" class="widget"></div>
         <div id="popular-posts-widget" class="widget"></div>
-        
         <div class="prediction-widget-container widget"></div> 
-        
         <div class="widget-grid">
             <div id="freeboard-widget" class="widget"></div>
             <div id="soccer-widget" class="widget"></div>
@@ -474,19 +577,15 @@ async function renderMainView() {
         </div>
     `;
 
-    // 오른쪽 사이드바: 데스크톱용 AI 예측 위젯의 자리를 class로 변경합니다.
     rightCol.innerHTML = `
         <div id="sidebar-login-widget" class="widget"></div>
-
         <div class="prediction-widget-container widget"></div>
-
         <div id="sidebar-ranking-widget" class="widget">
             <div class="widget-header"><h2>실시간 갤러리 순위</h2></div>
             <div class="widget-body"><p style="text-align:center; color: var(--text-light);">순위 기능은 준비 중입니다.</p></div>
         </div>
     `;
 
-    // Populate widgets asynchronously
     renderBoardPreview('announcements-widget', 'announcements', '공지사항', 5);
     renderBoardPreview('popular-posts-widget', 'popular', '커뮤니티 인기글', 5);
     renderBoardPreview('freeboard-widget', 'freeboard', '자유게시판', 5);
@@ -962,14 +1061,31 @@ async function renderMainView() {
     } catch (error) { console.error("댓글 등록 오류: ", error); alert("댓글 등록에 실패했습니다."); }
   }
 
-  // EVENT LISTENERS & INITIALIZATION
-  onAuthStateChanged(auth, async (user) => {
+// EVENT LISTENERS & INITIALIZATION
+onAuthStateChanged(auth, async (user) => {
     const mobileUserMenu = document.getElementById('mobile-user-menu');
+    const mainNavList = document.querySelector('.main-nav ul');
+    
+    // 기존 관리자 메뉴가 있다면 삭제
+    mainNavList.querySelector('.admin-link')?.remove();
 
     if (user) {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const nickname = userDoc.exists() ? userDoc.data().nickname : user.email.split('@')[0];
-      appState.currentUser = { uid: user.uid, email: user.email, nickname };
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const nickname = userDoc.exists() ? userDoc.data().nickname : user.email.split('@')[0];
+        appState.currentUser = { uid: user.uid, email: user.email, nickname };
+
+        // --- 🔽 [수정] 관리자 확인 및 메뉴 추가 ---
+        if (user.email === 'admin@example.com') { // 관리자 이메일 주소로 변경하세요.
+            const adminLi = document.createElement('li');
+            adminLi.className = 'admin-link';
+            adminLi.innerHTML = `<a href="#" id="admin-menu-btn" class="nav-link">⚙️ 관리</a>`;
+            mainNavList.appendChild(adminLi);
+            document.getElementById('admin-menu-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                renderAdminView();
+            });
+        }
+        // --- 🔼 [수정] 여기까지 ---
       
       if (mobileUserMenu) {
         mobileUserMenu.innerHTML = `<span>${nickname}님</span><button id="mobile-logout-btn">로그아웃</button>`;
