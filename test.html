@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-스포츠 예측 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 헤더 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">⚽ K-스포츠 예측 게임</h1>
+            <p class="text-white/80">경기 결과를 예측하고 포인트를 획득하세요!</p>
+        </div>
+
+        <!-- 잔액 표시 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">💰 현재 잔액</h2>
+            <div class="text-4xl font-bold text-green-600">
+                <span id="balance">100,000</span>원
+            </div>
+        </div>
+
+        <!-- 경기 정보 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">🏆 오늘의 경기</h3>
+                <div class="flex items-center justify-center space-x-8">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-2">FC</div>
+                        <div class="font-semibold">FC 서울</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-600" id="match-score">- : -</div>
+                        <div class="text-sm text-gray-500">VS</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-2">SU</div>
+                        <div class="font-semibold">수원 삼성</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 예측 선택 -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">🎯 경기 결과 예측</h4>
+                <div class="grid grid-cols-3 gap-4">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="prediction" value="home" class="sr-only">
+                        <div class="bg-red-100 hover:bg-red-200 border-2 border-transparent hover:border-red-300 rounded-lg p-4 text-center transition-all">
+                            <div class="text-2xl mb-2">🏠</div>
+                            <div class="font-semibold">FC 서울 승</div>
+                            <div class="text-sm text-gray-600">배당률 2.1배</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="prediction" value="draw" class="sr-only">
+                        <div class="bg-yellow-100 hover:bg-yellow-200 border-2 border-transparent hover:border-yellow-300 rounded-lg p-4 text-center transition-all">
+                            <div class="text-2xl mb-2">🤝</div>
+                            <div class="font-semibold">무승부</div>
+                            <div class="text-sm text-gray-600">배당률 3.2배</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="prediction" value="away" class="sr-only">
+                        <div class="bg-blue-100 hover:bg-blue-200 border-2 border-transparent hover:border-blue-300 rounded-lg p-4 text-center transition-all">
+                            <div class="text-2xl mb-2">✈️</div>
+                            <div class="font-semibold">수원 삼성 승</div>
+                            <div class="text-sm text-gray-600">배당률 2.8배</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 배팅 금액 -->
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">💸 배팅 금액</h4>
+                <div class="flex items-center justify-center space-x-4">
+                    <input type="number" id="bet-amount" value="10000" min="1000" max="100000" step="1000" 
+                           class="border-2 border-gray-300 rounded-lg px-4 py-2 text-center font-semibold w-32">
+                    <span class="text-gray-600">원</span>
+                </div>
+                <div class="flex justify-center space-x-2 mt-4">
+                    <button onclick="setBetAmount(5000)" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">5천</button>
+                    <button onclick="setBetAmount(10000)" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">1만</button>
+                    <button onclick="setBetAmount(20000)" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">2만</button>
+                    <button onclick="setBetAmount(50000)" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm">5만</button>
+                </div>
+            </div>
+
+            <!-- 경기 시작 버튼 -->
+            <div class="text-center mb-6">
+                <button onclick="startMatch()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors">
+                    ⚽ 경기 시작!
+                </button>
+            </div>
+
+            <!-- 경기 결과 -->
+            <div id="match-result" class="text-center mb-4">
+                <div class="text-gray-500">경기 결과를 예측하고 시작 버튼을 눌러주세요!</div>
+            </div>
+
+            <!-- 새 경기 버튼 -->
+            <div class="text-center">
+                <button id="new-match-btn" onclick="newMatch()" style="display: none;" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                    🆕 새 경기
+                </button>
+            </div>
+        </div>
+
+        <!-- 게임 통계 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+                <div class="text-3xl mb-2">🎯</div>
+                <div class="text-2xl font-bold text-green-600" id="wins">0</div>
+                <div class="text-gray-600">성공</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+                <div class="text-3xl mb-2">❌</div>
+                <div class="text-2xl font-bold text-red-600" id="losses">0</div>
+                <div class="text-gray-600">실패</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover">
+                <div class="text-3xl mb-2">📊</div>
+                <div class="text-2xl font-bold text-blue-600" id="win-rate">0%</div>
+                <div class="text-gray-600">승률</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let balance = 100000;
+        let wins = 0;
+        let losses = 0;
+        let isMatchActive = false;
+
+        // 라디오 버튼 시각적 효과
+        document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('label').forEach(label => {
+                    const div = label.querySelector('div');
+                    div.classList.remove('ring-4', 'ring-blue-400', 'bg-blue-50');
+                });
+                
+                if (this.checked) {
+                    const div = this.parentElement.querySelector('div');
+                    div.classList.add('ring-4', 'ring-blue-400', 'bg-blue-50');
+                }
+            });
+        });
+
+        function setBetAmount(amount) {
+            document.getElementById('bet-amount').value = amount;
+        }
+
+        function startMatch() {
+            if (isMatchActive) return;
+            
+            const betAmount = parseInt(document.getElementById('bet-amount').value);
+            const userPrediction = document.querySelector('input[name="prediction"]:checked')?.value;
+            
+            if (!userPrediction) {
+                alert('예측을 선택해주세요!');
+                return;
+            }
+            
+            if (betAmount > balance) {
+                alert('잔액이 부족합니다!');
+                return;
+            }
+            
+            if (betAmount < 1000) {
+                alert('최소 배팅 금액은 1,000원입니다!');
+                return;
+            }
+            
+            isMatchActive = true;
+            document.getElementById('match-result').innerHTML = '<div class="text-blue-600 text-xl font-bold animate-pulse">⚽ 경기 진행 중...</div>';
+            document.getElementById('new-match-btn').style.display = 'none';
+            document.getElementById('match-score').textContent = '- : -';
+            
+            // 경기 시뮬레이션 (3초 후 결과 공개)
+            setTimeout(() => {
+                const homeScore = Math.floor(Math.random() * 4);
+                const awayScore = Math.floor(Math.random() * 4);
+                
+                // 결과 판정
+                let result;
+                if (homeScore > awayScore) {
+                    result = 'home';
+                } else if (awayScore > homeScore) {
+                    result = 'away';
+                } else {
+                    result = 'draw';
+                }
+                
+                // 예측 결과 확인
+                const isCorrect = userPrediction === result;
+                
+                let resultText, resultClass;
+                if (isCorrect) {
+                    balance += betAmount;
+                    wins++;
+                    resultText = `🎉 예측 성공! +${betAmount.toLocaleString()}원`;
+                    resultClass = 'text-green-600';
+                } else {
+                    balance -= betAmount;
+                    losses++;
+                    resultText = `😢 예측 실패! -${betAmount.toLocaleString()}원`;
+                    resultClass = 'text-red-600';
+                }
+                
+                // 최종 스코어 표시
+                document.getElementById('match-score').textContent = `${homeScore} : ${awayScore}`;
+                document.getElementById('match-result').innerHTML = `
+                    <div class="${resultClass} text-xl font-bold">${resultText}</div>
+                `;
+                document.getElementById('balance').textContent = balance.toLocaleString();
+                
+                // 통계 업데이트
+                updateStats();
+                
+                // 새 경기 버튼 활성화
+                document.getElementById('new-match-btn').style.display = 'block';
+                isMatchActive = false;
+            }, 3000);
+        }
+
+        function newMatch() {
+            // 팀 랜덤 변경
+            const teams = [
+                {name: 'FC 서울', color: 'bg-red-500', short: 'FC'},
+                {name: '수원 삼성', color: 'bg-blue-500', short: 'SU'},
+                {name: '울산 현대', color: 'bg-orange-500', short: 'UH'},
+                {name: '전북 현대', color: 'bg-green-500', short: 'JB'},
+                {name: '포항 스틸러스', color: 'bg-purple-500', short: 'PS'},
+                {name: '대구 FC', color: 'bg-indigo-500', short: 'DG'}
+            ];
+            
+            const homeTeam = teams[Math.floor(Math.random() * teams.length)];
+            let awayTeam = teams[Math.floor(Math.random() * teams.length)];
+            while (awayTeam === homeTeam) {
+                awayTeam = teams[Math.floor(Math.random() * teams.length)];
+            }
+            
+            // 팀 정보 업데이트
+            const homeDiv = document.querySelector('.text-center:first-child .w-16');
+            const awayDiv = document.querySelector('.text-center:last-child .w-16');
+            const homeNameDiv = document.querySelector('.text-center:first-child .font-semibold');
+            const awayNameDiv = document.querySelector('.text-center:last-child .font-semibold');
+            
+            homeDiv.className = `w-16 h-16 ${homeTeam.color} rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-2`;
+            homeDiv.textContent = homeTeam.short;
+            homeNameDiv.textContent = homeTeam.name;
+            
+            awayDiv.className = `w-16 h-16 ${awayTeam.color} rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-2`;
+            awayDiv.textContent = awayTeam.short;
+            awayNameDiv.textContent = awayTeam.name;
+            
+            // 초기화
+            document.getElementById('match-score').textContent = '- : -';
+            document.getElementById('match-result').innerHTML = '<div class="text-gray-500">경기 결과를 예측하고 시작 버튼을 눌러주세요!</div>';
+            document.getElementById('new-match-btn').style.display = 'none';
+            
+            // 예측 선택 초기화
+            document.querySelectorAll('input[name="prediction"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.querySelectorAll('label div').forEach(div => {
+                div.classList.remove('ring-4', 'ring-blue-400', 'bg-blue-50');
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('wins').textContent = wins;
+            document.getElementById('losses').textContent = losses;
+            const total = wins + losses;
+            const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+            document.getElementById('win-rate').textContent = winRate + '%';
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96fd1039551a8b68',t:'MTc1NTMwNjc0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
